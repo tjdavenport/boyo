@@ -1,9 +1,11 @@
 require('dotenv').config();
 
+const bot = require('./lib/bot');
 const app = require('./lib/app');
 const log = require('./lib/log');
 const {sql} = require('./lib/db');
 const {program} = require('commander');
+const register = require('@react-ssr/express/register');
 
 (async () => {
   program
@@ -27,12 +29,20 @@ const {program} = require('commander');
       await sql.sync({logging: false, force: true});
       log.db('tables seeded');
       await sql.close();
+      process.exit();
     });
 
   program
     .command('serve <port>')
     .action(async port => {
+      await register(app);
       app.listen(port, () => log.http(`listening on ${port}`));
+    });
+
+  program
+    .command('bot:login')
+    .action(() => {
+      bot.login(process.env.DISCORD_BOT_TOKEN);
     });
 
   await program.parseAsync();
