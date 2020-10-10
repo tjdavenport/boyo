@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;700&family=Roboto+Mono:wght@300;400;700&display=swap');
+
+@import './styles/reset';
+@import './styles/variables';
+@import './styles/typography';
+
+@import 'muicss/lib/sass/mui/_colors';
+$mui-accent-color: $color-constant;
+$mui-accent-color-dark: darken($color-constant, 25%);
+$mui-accent-color-light: darken($color-constant, 25%);
+@import 'muicss/lib/sass/mui/_variables';
+@import 'muicss/lib/sass/mui/_mixins';
+@mixin mui-text($mui-name) {
+  $mui-styles: map-get($mui-mui-text-styles, $mui-name);
+
+  font-weight: map-get($mui-styles, "font-weight");
+  font-size: map-get($mui-styles, "font-size");
+  line-height: map-get($mui-styles, "line-height");
+}
+@import 'muicss/lib/sass/mui/_buttons';
+@import 'muicss/lib/sass/mui/_ripple';
+
+@import 'bootstrap/scss/_functions.scss';
+@import 'bootstrap/scss/_variables.scss';
+@import 'bootstrap/scss/_mixins.scss';
+@import 'bootstrap/scss/_utilities.scss';
+
+
+body {
+    background-color: $color-bg;
+}
+
+.trianglify {
+    background-image: url($trianglify);
+    position: relative;
+    height: 70vh;
+}
+.trianglify__overlay {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+    background-color: rgba($color-bg, 0.4);
+}
+.trianglify__content {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+}
+

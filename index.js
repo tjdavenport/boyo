@@ -1,9 +1,9 @@
 require('dotenv').config();
 
-const bot = require('./lib/bot');
-const app = require('./lib/app');
-const log = require('./lib/log');
-const {sql} = require('./lib/db');
+const bot = require('./src/lib/bot');
+const app = require('./src/lib/app');
+const log = require('./src/lib/log');
+const {sql} = require('./src/lib/db');
 const {program} = require('commander');
 const register = require('@react-ssr/express/register');
 
