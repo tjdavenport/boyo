@@ -6,9 +6,15 @@
 
 @import 'muicss/lib/sass/mui/_colors';
 $mui-accent-color: $color-constant;
-$mui-accent-color-dark: darken($color-constant, 25%);
-$mui-accent-color-light: darken($color-constant, 25%);
+$mui-accent-color-dark: darken($color-constant, 15%);
+$mui-accent-color-light: darken($color-constant, 15%);
+
+$mui-primary-color: $color-libfunc;
+$mui-primary-color-dark: darken($color-libfunc, 15%);
+$mui-primary-color-light: darken($color-libfunc, 15%);
+
 @import 'muicss/lib/sass/mui/_variables';
+$mui-btn-font-size: 16px;
 @import 'muicss/lib/sass/mui/_mixins';
 @mixin mui-text($mui-name) {
   $mui-styles: map-get($mui-mui-text-styles, $mui-name);
@@ -19,6 +25,7 @@ $mui-accent-color-light: darken($color-constant, 25%);
 }
 @import 'muicss/lib/sass/mui/_buttons';
 @import 'muicss/lib/sass/mui/_ripple';
+@import 'muicss/lib/sass/mui/_helpers';
 
 @import 'bootstrap/scss/_functions.scss';
 @import 'bootstrap/scss/_variables.scss';
@@ -51,3 +58,6 @@ body {
     left: 0px;
 }
 
+.key-streak {
+    border-left: 4px $color-keyword solid;
+}
