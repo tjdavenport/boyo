@@ -1,10 +1,33 @@
 import '../src/index.scss';
+import {useState} from 'react';
+import {css} from '@emotion/core';
 import Button from 'muicss/lib/react/button';
+import BarLoader from 'react-spinners/BarLoader';
 import {faDiscord} from '@fortawesome/free-brands-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faHandPeace} from '@fortawesome/free-regular-svg-icons';
 
+const loginPopup = onTimeout => {
+  localStorage.setItem('isAuthenticated', false.toString());
+
+  const popup = window.open('/login', 'authorize', 'height=800,width=400');
+  if (window.focus) {
+    popup.focus();
+  }
+
+  setTimeout(() => onTimeout(), 30000);
+
+  const interval = setInterval(() => {
+    if (JSON.parse(localStorage.getItem('isAuthenticated'))) {
+      alert('we are authenticated');
+      clearInterval(interval);
+    }
+  }, 250);
+}
+
 export default function Home() {
+  const [pending, setPending] = useState(false);
+
   return (
     <>
       <div className="trianglify">
@@ -13,10 +36,20 @@ export default function Home() {
           <div>
             <h1 className="jumbo mb-1">Boutique Discord Bots</h1>
             <p className="lead ml-1 mb-2">Run the server we all want to be in</p>
-            <Button className="m-1" color="accent" variant="raised">
-              <FontAwesomeIcon style={{verticalAlign: 'middle'}} size="lg" className="mr-1" icon={faDiscord}/> Add to Discord
-            </Button>
-            <Button color="primary" variant="flat" size="lg">Learn More</Button>
+            <div className="d-flex">
+              <div>
+                <Button className="m-0" disabled={pending} color="accent" variant="raised" onClick={e => {
+                  setPending(true);
+                  loginPopup(() => setPending(false));
+                }}>
+                  <FontAwesomeIcon style={{verticalAlign: 'middle'}} size="lg" className="mr-1" icon={faDiscord}/> Add to Discord
+                </Button>
+                {pending && (
+                  <BarLoader color="#AE81FF" width="100%"/>
+                )}
+              </div>
+              <Button color="primary" variant="flat" size="lg">Learn More</Button>
+            </div>
           </div>
         </div>
       </div>
