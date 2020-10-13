@@ -25,7 +25,29 @@ const models = {
       type: DataTypes.STRING(255),
       allowNull: true
     },
-  })
+  }),
+  OAuth2Service: sql.define('OAuth2Service', {
+    type: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    accessToken: {
+      type: DataTypes.STRING(1000),
+      allowNull: true
+    },
+    refreshToken: {
+      type: DataTypes.STRING(1000),
+      allowNull: true
+    },
+  }),
 };
+
+models.User.hasMany(models.OAuth2Service, {
+  onDelete: 'CASCADE',
+  foreignKey: {
+    name: 'userId',
+    allowNull: false,
+  },
+});
 
 module.exports = {sql, models};

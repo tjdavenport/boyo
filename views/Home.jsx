@@ -37,7 +37,7 @@ export default function Home() {
             <h1 className="jumbo mb-1">Boutique Discord Bots</h1>
             <p className="lead ml-1 mb-2">Run the server we all want to be in</p>
             <div className="d-flex">
-              <div>
+              <div className="pl-1">
                 <Button className="m-0" disabled={pending} color="accent" variant="raised" onClick={e => {
                   setPending(true);
                   loginPopup(() => setPending(false));
@@ -48,7 +48,7 @@ export default function Home() {
                   <BarLoader color="#AE81FF" width="100%"/>
                 )}
               </div>
-              <Button color="primary" variant="flat" size="lg">Learn More</Button>
+              <Button className="m-0 ml-1" color="primary" variant="flat" size="lg">Learn More</Button>
             </div>
           </div>
         </div>

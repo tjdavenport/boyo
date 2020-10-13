@@ -20,6 +20,39 @@ const discordios = config => (req, res, next) => discord.request({
 }).then(discordRes => res.status(discordRes.status).json(discordRes.data))
   .catch(error => error.response ? res.status(error.response.status).json(error.response.data) : next(error));
 
+passport.use((() => {
+  const nitrado = new Strategy({
+    scope: ['user_info', 'service'],
+    clientID: process.env.NITRADO_APP_ID,
+    clientSecret: process.env.NITRADO_APP_SECRET,
+    callbackURL: process.env.NITRADO_CALLBACK_URL,
+    authorizationURL: process.env.NITRADO_AUTHORIZATION_URL,
+    tokenURL: process.env.NITRADO_TOKEN_URL,
+    passReqToCallback: true,
+    state: true,
+  }, async (req, accessToken, refreshToken, profile, done) => {
+    try {
+      log.auth(`attempting to create nitrado oauth2 service for user ${req.user.id}`);
+      const [service] = await models.OAuth2Service.findOrCreate({
+        where: {type: 'nitrado', refreshToken, userId: req.user.id}
+      });
+    
+      service.accessToken = accessToken;
+      service.refreshToken = refreshToken;
+      service.userId = req.user.id;
+      await service.save();
+
+      log.auth(`created nitrado oauth2 service for user ${req.user.id}`);
+      done(undefined, req.user);
+    } catch (error) {
+      log.auth(`failed to create nitrado oauth2 service for user ${req.user.id}`);
+      console.error(error);
+      done(undefined, error);
+    }
+  });
+  nitrado.name = 'oauth2-nitrado';
+  return nitrado;
+})());
 passport.use(new Strategy({
   scope: ['identify', 'email', 'guilds'],
   clientID: process.env.DISCORD_CLIENT_ID,
@@ -27,6 +60,7 @@ passport.use(new Strategy({
   callbackURL: process.env.DISCORD_CALLBACK_URL,
   authorizationURL: process.env.DISCORD_AUTHORIZATION_URL,
   tokenURL: process.env.DISCORD_TOKEN_URL,
+  state: true,
 }, async (accessToken, refreshToken, profile, done) => {
   log.auth('attempting to authenticate');
   try {
@@ -41,6 +75,7 @@ passport.use(new Strategy({
     done(undefined, user);
   } catch (error) {
     log.auth('authentication failed');
+    console.error(error);
     done(error);
   }
 }));
@@ -63,6 +98,17 @@ app.use(passport.session());
 
 app.get('/api/users/@me', authed, discordios({url: '/users/@me'}));
 app.get('/api/users/@me/guilds', authed, discordios({url: '/users/@me/guilds'}));
+
+
+app.get('/add-service/nitrado', authed, passport.authenticate('oauth2-nitrado'));
+app.get('/add-service/nitrado/callback', passport.authenticate('oauth2-nitrado', {
+  failureRedirect: '/login/failure'
+}), (req, res) => res.type('html').send(`
+  <html><head><script>
+    window.localStorage.setItem('service-added-nitrado', ${req.isAuthenticated()});
+    window.close();
+  </script></head></html>
+`));
 
 app.get('/login', passport.authenticate('oauth2'));
 app.get('/login/callback', passport.authenticate('oauth2', {
