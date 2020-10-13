@@ -9,6 +9,7 @@ $color-bg: #272822;
 $color-fg: #F8F8F2;
 $color-selection: #49483E;
 
+.color-fg {color: $color-fg;}
 .color-string {color: $color-string;}
 .color-bg-darker {background-color: darken($color-bg, 4%);}
 

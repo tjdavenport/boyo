@@ -1,11 +1,12 @@
 import '../src/index.scss';
-import {useState} from 'react';
 import {css} from '@emotion/core';
+import React, {useState} from 'react';
+import Logo from'../src/components/Logo';
 import Button from 'muicss/lib/react/button';
 import BarLoader from 'react-spinners/BarLoader';
+import {faCog} from '@fortawesome/free-solid-svg-icons';
 import {faDiscord} from '@fortawesome/free-brands-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faHandPeace} from '@fortawesome/free-regular-svg-icons';
 
 const loginPopup = onTimeout => {
   localStorage.setItem('isAuthenticated', false.toString());
@@ -25,7 +26,7 @@ const loginPopup = onTimeout => {
   }, 250);
 }
 
-export default function Home() {
+export default function Home({isAuthenticated}) {
   const [pending, setPending] = useState(false);
 
   return (
@@ -38,14 +39,22 @@ export default function Home() {
             <p className="lead ml-1 mb-2">Run the server we all want to be in</p>
             <div className="d-flex">
               <div className="pl-1">
-                <Button className="m-0" disabled={pending} color="accent" variant="raised" onClick={e => {
-                  setPending(true);
-                  loginPopup(() => setPending(false));
-                }}>
-                  <FontAwesomeIcon style={{verticalAlign: 'middle'}} size="lg" className="mr-1" icon={faDiscord}/> Add to Discord
-                </Button>
-                {pending && (
-                  <BarLoader color="#AE81FF" width="100%"/>
+                {isAuthenticated ? (
+                  <Button className="m-0" disabled={pending} color="accent" variant="raised" onClick={e => alert('poop')}>
+                    <FontAwesomeIcon size="lg" className="mr-1" icon={faCog}/> My Dashboard
+                  </Button>
+                ) : (
+                  <React.Fragment>
+                    <Button className="m-0" disabled={pending} color="accent" variant="raised" onClick={e => {
+                      setPending(true);
+                      loginPopup(() => setPending(false));
+                    }}>
+                      <FontAwesomeIcon style={{verticalAlign: 'middle'}} size="lg" className="mr-1" icon={faDiscord}/> Add to Discord
+                    </Button>
+                    {pending && (
+                      <BarLoader color="#AE81FF" width="100%"/>
+                    )}
+                  </React.Fragment>
                 )}
               </div>
               <Button className="m-0 ml-1" color="primary" variant="flat" size="lg">Learn More</Button>
@@ -53,7 +62,9 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <h4 className="text-center mt-5"><a href="/" className="color-string">'boyo.gg'</a> <FontAwesomeIcon className="color-string" icon={faHandPeace}/></h4>
+      <div className="text-center my-4">
+        <Logo/>
+      </div>
       <div className="d-flex justify-content-center pb-5">
         <div className="color-bg-darker p-3 mui--z3 key-streak" style={{minWidth: '40%', maxWidth: '800px'}}>
           <h1>Entering Open Alpha</h1>

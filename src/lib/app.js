@@ -96,9 +96,12 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+/*app.get('/app*', authedRedirect, handle(async (req, res) => {
+  return res.sendFile(path.join(__dirname, '..', 'frontend', 'build', 'index.html'));
+}));*/
+
 app.get('/api/users/@me', authed, discordios({url: '/users/@me'}));
 app.get('/api/users/@me/guilds', authed, discordios({url: '/users/@me/guilds'}));
-
 
 app.get('/add-service/nitrado', authed, passport.authenticate('oauth2-nitrado'));
 app.get('/add-service/nitrado/callback', passport.authenticate('oauth2-nitrado', {
@@ -121,7 +124,7 @@ app.get('/login/callback', passport.authenticate('oauth2', {
 `));
 
 app.get('/', (req, res) => {
-  return res.render('Home.jsx');
+  return res.render('Home.jsx', {isAuthenticated: req.isAuthenticated()});
 });
 
 module.exports = app;
