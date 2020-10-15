@@ -15,8 +15,8 @@ const discord = axios.create({baseURL: process.env.DISCORD_API_URI});
 const handle = handler => (req, res, next) => handler.call(null, req, res, next).catch(err => next(err));
 const authed = (req, res, next) => req.isAuthenticated() ? next() : res.sendStatus(401);
 const discordios = config => (req, res, next) => discord.request({
-  ...config,
-  headers: {Authorization: `Bearer ${req.user.accessToken}`}
+  headers: {Authorization: `Bearer ${req.user.accessToken}`},
+  ...(typeof config === 'function' ? config(req) : config),
 }).then(discordRes => res.status(discordRes.status).json(discordRes.data))
   .catch(error => error.response ? res.status(error.response.status).json(error.response.data) : next(error));
 
@@ -102,6 +102,12 @@ app.use(passport.session());
 
 app.get('/api/users/@me', authed, discordios({url: '/users/@me'}));
 app.get('/api/users/@me/guilds', authed, discordios({url: '/users/@me/guilds'}));
+app.get('/api/guilds/:guildId/roles', authed, discordios(req => ({
+  url: `/guilds/${req.params.guildId}/roles`,
+  headers: {
+    Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
+  },
+})));
 
 app.get('/add-service/nitrado', authed, passport.authenticate('oauth2-nitrado'));
 app.get('/add-service/nitrado/callback', passport.authenticate('oauth2-nitrado', {

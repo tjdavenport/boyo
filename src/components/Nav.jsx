@@ -3,7 +3,7 @@ import Logo from './Logo';
 
 export default function Nav({profile, loading}) {
   return (
-    <div className="color-bg-darker mui--z1 p-3 d-flex align-items-center">
+    <div className="color-bg-darker mui--z1 p-3 d-flex align-items-center mb-5">
       <Logo/>
       <nav className="ml-5 flex-grow-1">
         <a className="color-fg mr-3 " href="#">Servers</a>
