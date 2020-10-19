@@ -1,25 +1,46 @@
 import './index.scss';
-import React from 'react';
 import ReactDOM from 'react-dom';
 import Nav from './components/Nav'; 
+import React, {useState} from 'react';
 import Button from 'muicss/lib/react/button';
 import BarLoader from 'react-spinners/BarLoader';
+import PopupPoller from './components/PopupPoller';
 import {useProfile, useServers, useGuildRoles} from './hooks';
 import {BrowserRouter, Switch, Route, Link} from 'react-router-dom';
 
+const addBotUrl = guildId => 
+  `https://discord.com/api/oauth2/authorize?client_id=${process.env.REACT_APP_CLIENT_ID}&scope=bot&permissions=1006758976&guild_id=${guildId}`;
+
 const GuildButton = ({guildId}) => {
   const {guildRoles, loadingGuildRoles} = useGuildRoles(guildId);
+  const [pending, setPending] = useState(0);
 
   return (
     <React.Fragment>
-      <Button className="m-0" disabled={loadingGuildRoles} size="small" color="accent" variant="raised" onClick={e => {
-        alert('foobar');
-      }}>
-        Setup boyo.gg
-      </Button>
-      {loadingGuildRoles && (
-        <BarLoader color="#AE81FF" width="100%"/>
-      )}
+      <PopupPoller 
+        lsKey="added-server" 
+        title={`Add boyo.gg`}
+        width="400" 
+        height="800"
+        location={addBotUrl(guildId)}
+        active={pending}
+        onTimeout={() => setPending(false)}
+        onDone={() => alert('we are authenticated')}
+      />
+      <div>
+        <Button className="m-0" disabled={loadingGuildRoles || pending} size="small" color="accent" variant="raised" onClick={e => {
+          setPending(guildId);
+        }}>
+          {loadingGuildRoles ? (
+            <>...</>
+          ) : (
+            (guildRoles.length > 0) ? <React.Fragment> Manage Bots </React.Fragment> : <React.Fragment>Setup boyo.gg</React.Fragment>
+          )}
+        </Button>
+        {(loadingGuildRoles || !!pending) && (
+          <BarLoader color="#AE81FF" width="100%"/>
+        )}
+      </div>
     </React.Fragment>
 
   );
@@ -34,7 +55,7 @@ const Servers = ({servers, loadingServers}) => {
           <>foobar</>
         ) : (
           servers.filter(({permissions}) => ((permissions & 8) !== 0) || ((permissions & 32) !== 0)).map(server => (
-            <div className="d-flex align-items-center mb-3">
+            <div className="d-flex align-items-center mb-3" key={server.id}>
               {server.icon ? (
                 <img width="45" height="45" className="mr-3" style={{borderRadius: '999px'}} src={`https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png`}/>
               ) : (

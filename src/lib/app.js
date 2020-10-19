@@ -14,6 +14,12 @@ const discord = axios.create({baseURL: process.env.DISCORD_API_URI});
 
 const handle = handler => (req, res, next) => handler.call(null, req, res, next).catch(err => next(err));
 const authed = (req, res, next) => req.isAuthenticated() ? next() : res.sendStatus(401);
+const setLsKey = lsKey => (req, res) => res.type('html').send(`
+  <html><head><script>
+    window.localStorage.setItem('${lsKey}', ${req.isAuthenticated()});
+    window.close();
+  </script></head></html>
+`)
 const discordios = config => (req, res, next) => discord.request({
   headers: {Authorization: `Bearer ${req.user.accessToken}`},
   ...(typeof config === 'function' ? config(req) : config),
@@ -112,22 +118,14 @@ app.get('/api/guilds/:guildId/roles', authed, discordios(req => ({
 app.get('/add-service/nitrado', authed, passport.authenticate('oauth2-nitrado'));
 app.get('/add-service/nitrado/callback', passport.authenticate('oauth2-nitrado', {
   failureRedirect: '/login/failure'
-}), (req, res) => res.type('html').send(`
-  <html><head><script>
-    window.localStorage.setItem('service-added-nitrado', ${req.isAuthenticated()});
-    window.close();
-  </script></head></html>
-`));
+}), setLsKey('service-added-nitrado'));
 
 app.get('/login', passport.authenticate('oauth2'));
 app.get('/login/callback', passport.authenticate('oauth2', {
   failureRedirect: '/login/failure'
-}), (req, res) => res.type('html').send(`
-  <html><head><script>
-    window.localStorage.setItem('isAuthenticated', ${req.isAuthenticated()});
-    window.close();
-  </script></head></html>
-`));
+}), setLsKey('isAuthenticated'));
+
+app.get('/add-server/:id', authed, setLsKey('added-server'));
 
 app.get('/', (req, res) => {
   return res.render('Home.jsx', {isAuthenticated: req.isAuthenticated()});

@@ -4,27 +4,10 @@ import React, {useState} from 'react';
 import Logo from'../src/components/Logo';
 import Button from 'muicss/lib/react/button';
 import BarLoader from 'react-spinners/BarLoader';
+import PopupPoller from '../src/components/PopupPoller';
 import {faCog} from '@fortawesome/free-solid-svg-icons';
 import {faDiscord} from '@fortawesome/free-brands-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-
-const loginPopup = onTimeout => {
-  localStorage.setItem('isAuthenticated', false.toString());
-
-  const popup = window.open('/login', 'authorize', 'height=800,width=400');
-  if (window.focus) {
-    popup.focus();
-  }
-
-  setTimeout(() => onTimeout(), 30000);
-
-  const interval = setInterval(() => {
-    if (JSON.parse(localStorage.getItem('isAuthenticated'))) {
-      alert('we are authenticated');
-      clearInterval(interval);
-    }
-  }, 250);
-}
 
 export default function Home({isAuthenticated}) {
   const [pending, setPending] = useState(false);
@@ -45,10 +28,16 @@ export default function Home({isAuthenticated}) {
                   </Button>
                 ) : (
                   <React.Fragment>
-                    <Button className="m-0" disabled={pending} color="accent" variant="raised" onClick={e => {
-                      setPending(true);
-                      loginPopup(() => setPending(false));
-                    }}>
+                    <PopupPoller 
+                      title="Authorize boyo.gg" 
+                      width="400" 
+                      height="800"
+                      location="/login"
+                      active={pending}
+                      onTimeout={() => setPending(false)}
+                      onDone={() => alert('we are authenticated')}
+                    />
+                    <Button className="m-0" disabled={pending} color="accent" variant="raised" onClick={e => setPending(true)}>
                       <FontAwesomeIcon style={{verticalAlign: 'middle'}} size="lg" className="mr-1" icon={faDiscord}/> Add to Discord
                     </Button>
                     {pending && (
