@@ -15,11 +15,13 @@ const register = require('@react-ssr/express/register');
 
       try {
         await sql.authenticate({logging: false});
-        log.db('cb connection active');
+        log.db('db connection active');
         await sql.close();
+        process.exit();
       } catch (error) {
         log.db('db connection failed');
         console.error(error);
+        process.exit();
       }
     });
 

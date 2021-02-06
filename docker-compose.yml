@@ -1,0 +1,16 @@
+services:
+  dev-db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: lol12345
+      POSTGRES_USER: boyo
+      POSTGRES_DB: boyo
+  dev-dba:
+    image: dpage/pgadmin4
+    ports:
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: boyo@boyo.gg
+      PGADMIN_DEFAULT_PASSWORD: lol12345
