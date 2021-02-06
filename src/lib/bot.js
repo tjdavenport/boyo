@@ -6,7 +6,7 @@ const client = new Discord.Client();
 client.on('ready', () => log.bot('boyo bot ready'));
 
 client.on('message', async msg => {
-  console.log(msg.content);
+  console.log(msg.guild.id);
 });
 
 module.exports = client;
