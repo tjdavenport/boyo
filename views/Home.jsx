@@ -55,7 +55,7 @@ export default function Home({isAuthenticated}) {
         <Logo/>
       </div>
       <div className="d-flex justify-content-center pb-5">
-        <div className="color-bg-darker p-3 mui--z3 key-streak" style={{minWidth: '40%', maxWidth: '800px'}}>
+        <div className="color-bg px-3 mui--z2 key-streak" style={{minWidth: '40%', maxWidth: '800px'}}>
           <h1>Entering Open Alpha</h1>
           <p>A suite of tools built for game server admins and PC gaming enthusiasts. Boyo.gg tries to provide tools community leaders can use to create the best possible experience for themselves and their members.</p>
           <p>Starting with a focus on console DayZ, boyo.gg will provide;</p>

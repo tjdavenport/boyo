@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const {Strategy} = require('passport-oauth2');
 const MemoryStore = require('memorystore')(session);
+const OAuth2ServiceSessionStore = require('./OAuth2ServiceSessionStore');
 
 const app = express();
 const discord = axios.create({baseURL: process.env.DISCORD_API_URI});
@@ -31,21 +32,25 @@ passport.use((() => {
     scope: ['user_info', 'service'],
     clientID: process.env.NITRADO_APP_ID,
     clientSecret: process.env.NITRADO_APP_SECRET,
-    callbackURL: process.env.NITRADO_CALLBACK_URL,
+    callbackURL: `${process.env.HOST}/add-service/nitrado/callback`,
     authorizationURL: process.env.NITRADO_AUTHORIZATION_URL,
     tokenURL: process.env.NITRADO_TOKEN_URL,
     passReqToCallback: true,
     state: true,
+    store: new OAuth2ServiceSessionStore({key: 'oauth2-nitrado'})
   }, async (req, accessToken, refreshToken, profile, done) => {
     try {
       log.auth(`attempting to create nitrado oauth2 service for user ${req.user.id}`);
+      const [uuid, guildId] = req.query.state.split(':');
+
+      log.auth(`attempting to create nitrado oauth2 service for guild ${guildId}`);
       const [service] = await models.OAuth2Service.findOrCreate({
-        where: {type: 'nitrado', refreshToken, userId: req.user.id}
+        where: {type: 'nitrado', refreshToken, guildId}
       });
     
       service.accessToken = accessToken;
       service.refreshToken = refreshToken;
-      service.userId = req.user.id;
+      service.guildId = guildId;
       await service.save();
 
       log.auth(`created nitrado oauth2 service for user ${req.user.id}`);
@@ -63,7 +68,7 @@ passport.use(new Strategy({
   scope: ['identify', 'email', 'guilds'],
   clientID: process.env.DISCORD_CLIENT_ID,
   clientSecret: process.env.DISCORD_CLIENT_SECRET,
-  callbackURL: process.env.DISCORD_CALLBACK_URL,
+  callbackURL: `${process.env.HOST}/login/callback`,
   authorizationURL: process.env.DISCORD_AUTHORIZATION_URL,
   tokenURL: process.env.DISCORD_TOKEN_URL,
   state: true,
@@ -115,7 +120,7 @@ app.get('/api/guilds/:guildId/roles', authed, discordios(req => ({
   },
 })));
 
-app.get('/add-service/nitrado', authed, passport.authenticate('oauth2-nitrado'));
+app.get('/:guildId/add-service/nitrado', authed, passport.authenticate('oauth2-nitrado'));
 app.get('/add-service/nitrado/callback', passport.authenticate('oauth2-nitrado', {
   failureRedirect: '/login/failure'
 }), setLsKey('service-added-nitrado'));

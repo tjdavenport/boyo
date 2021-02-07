@@ -1,4 +1,9 @@
 @import 'muicss/lib/sass/mui/_colors';
+
+$mui-btn-default-font-color: $color-bg;
+$mui-btn-default-bg-color: $color-string;
+$mui-btn-default-ripple-color: $color-variable;
+
 $mui-accent-color: $color-constant;
 $mui-accent-color-dark: darken($color-constant, 15%);
 $mui-accent-color-light: darken($color-constant, 10%);

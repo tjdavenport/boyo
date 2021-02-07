@@ -72,6 +72,10 @@ const models = {
       type: DataTypes.STRING(255),
       allowNull: false
     },
+    guildId: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
     accessToken: {
       type: DataTypes.STRING(1000),
       allowNull: true
@@ -101,13 +105,6 @@ models.AttachedBotService.belongsTo(models.BotService, {
   onDelete: 'CASCADE',
   foreignKey: {
     name: 'botServiceId',
-    allowNull: false,
-  },
-});
-models.User.hasMany(models.OAuth2Service, {
-  onDelete: 'CASCADE',
-  foreignKey: {
-    name: 'userId',
     allowNull: false,
   },
 });

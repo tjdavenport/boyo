@@ -63,7 +63,7 @@ const Servers = ({servers, loadingServers}) => {
                   <strong>{server.name[0].toUpperCase()}</strong>
                 </div>
               )}
-              <p className="lead m-0 mr-4 flex-grow-1">{server.name}</p>
+              <p className="lead m-0 mr-5 flex-grow-1">{server.name}</p>
               <GuildButton guildId={server.id}/>
             </div>
           ))
