@@ -14,12 +14,12 @@ export default function Home({isAuthenticated}) {
 
   return (
     <>
-      <div className="trianglify">
+      <div className="trianglify" style={{height: '70vh'}}>
         <div className="trianglify__overlay"/>
         <div className="trianglify__content p-3 d-flex align-items-center justify-content-center">
           <div>
-            <h1 className="jumbo mb-1">Boutique Discord Bots</h1>
-            <p className="lead ml-1 mb-2">Run the server we all want to be in</p>
+            <div className="mui--text-display3 mb-1">Boutique Discord Bots</div>
+            <p className="mui--text-subhead ml-1 mb-2">Run the server we all want to be in</p>
             <div className="d-flex">
               <div className="pl-1">
                 {isAuthenticated ? (

@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;700&family=Roboto+Mono:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;500;700&family=Roboto+Mono:wght@300;400;700&display=swap');
 
 @import './styles/reset';
 @import './styles/variables';
-@import './styles/typography';
+//@import './styles/typography';
 
 @import './styles/mui';
 
@@ -10,7 +10,7 @@
 @import 'bootstrap/scss/_variables.scss';
 @import 'bootstrap/scss/_mixins.scss';
 @import 'bootstrap/scss/_utilities.scss';
-
+@import 'bootstrap/scss/_grid.scss';
 
 body {
     background-color: $color-bg;
@@ -25,11 +25,9 @@ body {
     color: $color-fg;
 }
 
-
 .trianglify {
     background-image: url($trianglify);
     position: relative;
-    height: 70vh;
 }
 .trianglify__overlay {
     position: absolute;

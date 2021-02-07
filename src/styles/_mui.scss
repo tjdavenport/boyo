@@ -1,7 +1,8 @@
 @import 'muicss/lib/sass/mui/_colors';
 $mui-accent-color: $color-constant;
 $mui-accent-color-dark: darken($color-constant, 15%);
-$mui-accent-color-light: darken($color-constant, 15%);
+$mui-accent-color-light: darken($color-constant, 10%);
+$mui-btn-accent-ripple-color: darken($color-constant, 20%);
 
 $mui-primary-color: $color-libfunc;
 $mui-primary-color-dark: darken($color-libfunc, 15%);
@@ -9,14 +10,13 @@ $mui-primary-color-light: darken($color-libfunc, 15%);
 
 @import 'muicss/lib/sass/mui/_variables';
 $mui-btn-font-size: 16px;
+$mui-btn-flat-bg-color-hover: $color-variable;
+$mui-base-font-color: $color-variable;
+$mui-base-font-family: 'Montserrat', Helvetica, Arial, Verdana, Tahoma;
 @import 'muicss/lib/sass/mui/_mixins';
-@mixin mui-text($mui-name) {
-  $mui-styles: map-get($mui-mui-text-styles, $mui-name);
+@import 'muicss/lib/sass/mui/_globals';
 
-  font-weight: map-get($mui-styles, "font-weight");
-  font-size: map-get($mui-styles, "font-size");
-  line-height: map-get($mui-styles, "line-height");
-}
+@import 'muicss/lib/sass/mui/_typography.scss';
 @import 'muicss/lib/sass/mui/_buttons';
 @import 'muicss/lib/sass/mui/_ripple';
 @import 'muicss/lib/sass/mui/_helpers';
