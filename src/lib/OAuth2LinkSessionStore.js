@@ -1,11 +1,11 @@
 const uuid = require('uuid');
 const SessionStore = require('passport-oauth2/lib/state/session');
 
-function OAuth2ServiceSessionStore(options) {
+function OAuth2LinkSessionStore(options) {
   SessionStore.call(this, options);
 }
 
-OAuth2ServiceSessionStore.prototype = {
+OAuth2LinkSessionStore.prototype = {
   ...SessionStore.prototype,
   /**
    * Store request state.
@@ -27,4 +27,4 @@ OAuth2ServiceSessionStore.prototype = {
   }
 };
 
-module.exports = OAuth2ServiceSessionStore;
+module.exports = OAuth2LinkSessionStore;

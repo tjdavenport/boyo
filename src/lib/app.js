@@ -8,7 +8,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const {Strategy} = require('passport-oauth2');
 const MemoryStore = require('memorystore')(session);
-const OAuth2ServiceSessionStore = require('./OAuth2ServiceSessionStore');
+const OAuth2LinkSessionStore = require('./OAuth2LinkSessionStore');
 
 const app = express();
 const discord = axios.create({baseURL: process.env.DISCORD_API_URI});
@@ -37,14 +37,14 @@ passport.use((() => {
     tokenURL: process.env.NITRADO_TOKEN_URL,
     passReqToCallback: true,
     state: true,
-    store: new OAuth2ServiceSessionStore({key: 'oauth2-nitrado'})
+    store: new OAuth2LinkSessionStore({key: 'oauth2-nitrado'})
   }, async (req, accessToken, refreshToken, profile, done) => {
     try {
       log.auth(`attempting to create nitrado oauth2 service for user ${req.user.id}`);
       const [uuid, guildId] = req.query.state.split(':');
 
       log.auth(`attempting to create nitrado oauth2 service for guild ${guildId}`);
-      const [service] = await models.OAuth2Service.findOrCreate({
+      const [service] = await models.OAuth2Link.findOrCreate({
         where: {type: 'nitrado', refreshToken, guildId}
       });
     
