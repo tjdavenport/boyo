@@ -41,6 +41,7 @@ configure(process.env);
     .action(async port => {
       const boyo = express();
       boyo.set('config', process.env);
+      boyo.set('log', log);
       app(boyo);
       await register(boyo);
       await boyo.start(port);
