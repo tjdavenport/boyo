@@ -41,6 +41,7 @@ module.exports = app => {
       store: new OAuth2LinkSessionStore({key: 'oauth2-nitrado'})
     }, async (req, accessToken, refreshToken, profile, done) => {
       try {
+        console.log('poop');
         log.auth(`attempting to create nitrado oauth2 service for user ${req.user.id}`);
         const [uuid, guildId] = req.query.state.split(':');
 
@@ -85,6 +86,7 @@ module.exports = app => {
 
       done(undefined, user);
       log.auth(`user authenticated`);
+      console.log('poop');
     } catch (error) {
       log.auth('authentication failed');
       console.error(error);
@@ -123,12 +125,15 @@ module.exports = app => {
 
   app.get('/:guildId/add-service/nitrado', authed, passport.authenticate('oauth2-nitrado'));
   app.get('/add-service/nitrado/callback', passport.authenticate('oauth2-nitrado', {
-    failureRedirect: '/login/failure'
+    //failureRedirect: '/login/failure'
   }), setLsKey('service-added-nitrado'));
 
-  app.get('/login', passport.authenticate('oauth2'));
+  app.get('/login', (req, res, next) => {
+    console.log('foo');
+    next();
+  }, passport.authenticate('oauth2'));
   app.get('/login/callback', passport.authenticate('oauth2', {
-    failureRedirect: '/login/failure'
+    //failureRedirect: '/login/failure'
   }), setLsKey('isAuthenticated'));
 
   app.get('/add-server/:id', authed, setLsKey('added-server'));

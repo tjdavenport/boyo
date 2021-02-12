@@ -5,8 +5,8 @@ const bodyParser = require('body-parser');
 
 module.exports = () => {
   const app = express();
-  app.use(bodyParser.json());
   app.use(cors());
+  app.use(bodyParser.json());
 
   app.get('/api/users/@me', (req, res, next) => {
     return res.json({foo: 'bar'});

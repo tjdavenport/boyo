@@ -35,8 +35,6 @@ module.exports = () => {
   app.use(bodyParser.json());
 
   app.get('/:service/api/oauth2/authorize', (req, res, next) => {
-    res.set('Access-Control-Allow-Credentials', 'true');
-    console.log('sending redirect');
     return res.redirect(`${req.query.redirect_uri}?${new url.URLSearchParams({
       code: 'd8vtn5s1zlouyyflt94ggglzu2635g',
       state: req.query.state
@@ -44,7 +42,6 @@ module.exports = () => {
   });
 
   app.post('/:service/api/oauth2/token', (req, res, next) => {
-    res.set('Access-Control-Allow-Credentials', 'true');
     return res.json(tokens[req.params.service]);
   });
 

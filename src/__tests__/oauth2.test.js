@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 require('dotenv').config();
 const cors = require('cors');
 const axios = require('axios');
@@ -20,6 +24,7 @@ configure(config)
 
 axiosCookieJarSupport(axios);
 axios.defaults.jar = new tough.CookieJar();
+axios.defaults.withCredentials = true;
 
 describe('endopints involving oAuth2', () => {
   const servers = [];
@@ -30,7 +35,7 @@ describe('endopints involving oAuth2', () => {
 
     boyo.set('config', config);
     boyo.set('log', {
-      auth: msg => console.log(msg)
+      auth: msg => boyo.emit('log', msg)
     });
     boyo.use(cors());
     app(boyo);
@@ -40,14 +45,11 @@ describe('endopints involving oAuth2', () => {
     servers.push(await discordApp().start(1557));
   });
 
-  it('creates a user and authenticates with Discord', async () => {
-    await axios.get('http://localhost:1337/login', {
-      withCredentials: true
+  it('creates a user and authenticates with Discord', done => {
+    boyo.on('log', msg => {
+      (msg === 'user authenticated') && done();
     });
-
-    await new Promise(resolve => boyo.on('log', msg => {
-      console.log(msg);
-    }));
+    axios.get('http://localhost:1337/login');
   });
 
   afterAll(() => {
