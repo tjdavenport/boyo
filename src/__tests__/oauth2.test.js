@@ -18,11 +18,8 @@ const config = {
 };
 configure(config)
 
-const client = axios.create({
-  baseURL: 'http://localhost:1337',
-  jar: new tough.CookieJar(),
-});
-axiosCookieJarSupport(client);
+axiosCookieJarSupport(axios);
+axios.defaults.jar = new tough.CookieJar();
 
 describe('endopints involving oAuth2', () => {
   const servers = [];
@@ -44,7 +41,9 @@ describe('endopints involving oAuth2', () => {
   });
 
   it('creates a user and authenticates with Discord', async () => {
-    await client.get('/login');
+    await axios.get('http://localhost:1337/login', {
+      withCredentials: true
+    });
 
     await new Promise(resolve => boyo.on('log', msg => {
       console.log(msg);

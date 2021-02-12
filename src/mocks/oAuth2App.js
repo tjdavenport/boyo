@@ -1,3 +1,4 @@
+const url = require('url');
 const cors = require('cors');
 const axios = require('axios');
 const express = require('express');
@@ -30,20 +31,20 @@ const tokens = {
 
 module.exports = () => {
   const app = express();
-  app.use(bodyParser.json());
   app.use(cors());
+  app.use(bodyParser.json());
 
   app.get('/:service/api/oauth2/authorize', (req, res, next) => {
-    axios.get(req.query.redirect_uri, {
+    res.set('Access-Control-Allow-Credentials', 'true');
+    console.log('sending redirect');
+    return res.redirect(`${req.query.redirect_uri}?${new url.URLSearchParams({
       code: 'd8vtn5s1zlouyyflt94ggglzu2635g',
-      state: req.body.state
-    });
-    console.log(req.query.redirect_uri);
-    console.log('we are sending authorize request');
-    return res.sendStatus(200);
+      state: req.query.state
+    }).toString()}`);
   });
 
   app.post('/:service/api/oauth2/token', (req, res, next) => {
+    res.set('Access-Control-Allow-Credentials', 'true');
     return res.json(tokens[req.params.service]);
   });
 
