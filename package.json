@@ -70,6 +70,10 @@
       "last 1 safari version"
     ]
   },
+  "jest": {
+    "globalSetup": "./jestSetup.js",
+    "globalTeardown": "./jestTeardown.js"
+  },
   "devDependencies": {
     "@storybook/addon-actions": "^6.1.17",
     "@storybook/addon-essentials": "^6.1.17",

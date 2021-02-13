@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 const url = require('url');
 const cors = require('cors');
 const axios = require('axios');
@@ -28,26 +31,23 @@ const tokens = {
     "token_type": "Bearer"
   }
 };
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
 
-module.exports = () => {
-  const app = express();
-  app.use(cors());
-  app.use(bodyParser.json());
+app.get('/:service/api/oauth2/authorize', (req, res, next) => {
+  return res.redirect(`${req.query.redirect_uri}?${new url.URLSearchParams({
+    code: 'd8vtn5s1zlouyyflt94ggglzu2635g',
+    state: req.query.state
+  }).toString()}`);
+});
 
-  app.get('/:service/api/oauth2/authorize', (req, res, next) => {
-    return res.redirect(`${req.query.redirect_uri}?${new url.URLSearchParams({
-      code: 'd8vtn5s1zlouyyflt94ggglzu2635g',
-      state: req.query.state
-    }).toString()}`);
-  });
+app.post('/:service/api/oauth2/token', (req, res, next) => {
+  return res.json(tokens[req.params.service]);
+});
 
-  app.post('/:service/api/oauth2/token', (req, res, next) => {
-    return res.json(tokens[req.params.service]);
-  });
+app.start = port => new Promise(resolve => {
+  const server = app.listen(port, () => resolve(server));
+});
 
-  app.start = port => new Promise(resolve => {
-    const server = app.listen(port, () => resolve(server));
-  });
-
-  return app;
-};
+module.exports = app;

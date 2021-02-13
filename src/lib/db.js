@@ -23,6 +23,7 @@ module.exports = {
     const sql = new Sequelize(DB_NAME, DB_USERNAME, DB_PASSWORD, {
       dialect: 'postgres',
       port: DB_PORT,
+      logging: config.logging === false ? false : undefined
     });
     cache.connection = sql;
 
