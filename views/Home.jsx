@@ -1,10 +1,10 @@
-import axios from 'axios';
 import '../src/index.scss';
 import {css} from '@emotion/core';
-import React, {useState} from 'react';
+import useAxios from 'axios-hooks';
 import Logo from'../src/components/Logo';
 import Popup from '../src/components/Popup';
 import Button from 'muicss/lib/react/button';
+import React, {useState, useEffect} from 'react';
 import BarLoader from 'react-spinners/BarLoader';
 import {faCog} from '@fortawesome/free-solid-svg-icons';
 import {faDiscord} from '@fortawesome/free-brands-svg-icons';
@@ -12,9 +12,13 @@ import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 
 export default function Home({isAuthenticated}) {
   const [pending, setPending] = useState(false);
+  const [{data: hasAuthenticated = isAuthenticated, loading, error}, checkAuthed] = useAxios({
+    url: '/api/is-authenticated',
+  }, {manual: true});
+  useEffect(() => {(!isAuthenticated && hasAuthenticated) && (window.location.href = '/dashboard')}, [hasAuthenticated]);
 
   return (
-    <>
+    <React.Fragment>
       <div className="trianglify" style={{height: '70vh'}}>
         <div className="trianglify__overlay"/>
         <div className="trianglify__content p-3 d-flex align-items-center justify-content-center">
@@ -24,7 +28,7 @@ export default function Home({isAuthenticated}) {
             <div className="d-flex">
               <div className="pl-1">
                 {isAuthenticated ? (
-                  <Button className="m-0" disabled={pending} color="accent" variant="raised" onClick={e => alert('poop')}>
+                  <Button className="m-0" disabled={pending} color="accent" variant="raised" onClick={e => window.location.href = '/dashboard'}>
                     <FontAwesomeIcon size="lg" className="mr-1" icon={faCog}/> My Dashboard
                   </Button>
                 ) : (
@@ -35,7 +39,7 @@ export default function Home({isAuthenticated}) {
                       height="800"
                       location="/login"
                       active={pending}
-                      onClose={() => alert('we are authenticated')}
+                      onClose={() => checkAuthed()}
                     />
                     <Button className="m-0" disabled={pending} color="accent" variant="raised" onClick={e => setPending(true)}>
                       <FontAwesomeIcon style={{verticalAlign: 'middle'}} size="lg" className="mr-1" icon={faDiscord}/> Add to Discord
@@ -73,6 +77,6 @@ export default function Home({isAuthenticated}) {
           <p><a href="">Join the pilot server</a></p>
         </div>
       </div>
-    </>
+    </React.Fragment>
   );
 }

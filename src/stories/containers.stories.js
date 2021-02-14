@@ -1,7 +1,7 @@
 import React from 'react';
 import {categories} from '../lib/constants';
 import Button from 'muicss/lib/react/button';
-import {faExclamationCircle} from '@fortawesome/free-solid-svg-icons';
+import {faPlug} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 
 export default {
@@ -25,8 +25,8 @@ export const trianglify = () => {
                       <div className="trianglify__content px-3 pt-2">
                         <div className="mui--text-title mb-2"><kbd>!{key}</kbd></div>
                         <p className="mb-3">{botCommand.description}</p>
-                        <Button className="m-0" size="small" variant="raised">
-                          <FontAwesomeIcon icon={faExclamationCircle}/> Requires Nitrado Link
+                        <Button className="m-0" size="small" color="accent" variant="raised">
+                          <span className="mr-1"><FontAwesomeIcon icon={faPlug}/></span> Enable
                         </Button>
                       </div>
                     </div>

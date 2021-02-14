@@ -21,10 +21,10 @@ module.exports = app => {
       window.close();
     </script></head></html>
   `)
-  const discordios = (config, asBot = true) => (req, res, next) => discord.request({
-    headers: {Authorization: asBot ? `Bot ${config.DISCORD_BOT_TOKEN}` : `Bearer ${req.user.accessToken}`},
+  const discordios = config => (req, res, next) => discord.request({
+    headers: {Authorization: `Bot ${config.DISCORD_BOT_TOKEN}`,
     ...(typeof config === 'function' ? config(req) : config),
-  }).then(discordRes => res.set('Cache-Control', 'public, max-age=9').status(discordRes.status).json(discordRes.data))
+  }).then(discordRes => res.set('Cache-Control', 'public, max-stale=4').status(discordRes.status).json(discordRes.data))
     .catch(error => error.response ? res.status(error.response.status).json(error.response.data) : next(error));
 
   passport.use((() => {
@@ -111,9 +111,6 @@ module.exports = app => {
     return res.sendFile(path.join(__dirname, '..', 'frontend', 'build', 'index.html'));
   }));*/
 
-
-  app.get('/api/users/@me', authed, discordios({url: '/users/@me'}, false));
-  app.get('/api/users/@me/guilds', authed, discordios({url: '/users/@me/guilds'}, false));
   app.get('/api/guilds/:guildId', authed, discordios(req => ({
     url: `/guilds/${req.params.guildId}`,
   })));
@@ -128,7 +125,8 @@ module.exports = app => {
     });
     return res.json(oAuth2Links.map(link => link.toJSON()));
   }));
-  app.get('/api/authenticated', (req, res) => res.json(req.isAuthenticated()));
+  app.get('/api/is-authenticated', (req, res) => res.json(req.isAuthenticated()));
+  app.get('/api/user', authed, (req, res) => res.json(req.user));
 
   app.get('/guilds/:guildId/add-service/nitrado', authed, passport.authenticate('oauth2-nitrado'));
   app.get('/add-service/nitrado/callback', passport.authenticate('oauth2-nitrado', {

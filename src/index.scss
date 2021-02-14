@@ -4,6 +4,7 @@
 
 $kbd-bg: #000;
 $link-hover-color: $color-libfunc;
+$breadcrumb-bg: rgba($color-bg, 0.35);
 @import 'bootstrap/scss/_functions.scss';
 @import 'bootstrap/scss/_variables.scss';
 @import 'bootstrap/scss/_mixins.scss';
@@ -11,6 +12,7 @@ $link-hover-color: $color-libfunc;
 @import 'bootstrap/scss/_reboot.scss';
 @import 'bootstrap/scss/_grid.scss';
 @import 'bootstrap/scss/_code.scss';
+@import 'bootstrap/scss/_breadcrumb.scss';
 
 @import './styles/mui';
 

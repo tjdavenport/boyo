@@ -1,9 +1,9 @@
 import React from 'react';
 import Logo from './Logo';
 
-export default function Nav({profile = {}, loading}) {
+export default function Nav({profile = {}}) {
   return (
-    <div className="color-bg mui--z1 p-3 d-flex align-items-center mb-4">
+    <div className="color-bg mui--z1 p-3 d-flex align-items-center">
       <Logo/>
       <nav className="ml-5 flex-grow-1">
         <a className="color-fg mr-3 " href="#">Servers</a>

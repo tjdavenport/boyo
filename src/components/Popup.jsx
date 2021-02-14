@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 
-export default function PopupPoller({title, width, height, location, active, onClose}) {
+export default function Popup({title, width, height, location, active, onClose}) {
   useEffect(() => {
     if (active) {
       const popup = window.open(location, title, `height=${height},width=${width}`);
