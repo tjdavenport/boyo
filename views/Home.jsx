@@ -1,10 +1,11 @@
+import axios from 'axios';
 import '../src/index.scss';
 import {css} from '@emotion/core';
 import React, {useState} from 'react';
 import Logo from'../src/components/Logo';
+import Popup from '../src/components/Popup';
 import Button from 'muicss/lib/react/button';
 import BarLoader from 'react-spinners/BarLoader';
-import PopupPoller from '../src/components/PopupPoller';
 import {faCog} from '@fortawesome/free-solid-svg-icons';
 import {faDiscord} from '@fortawesome/free-brands-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -28,20 +29,21 @@ export default function Home({isAuthenticated}) {
                   </Button>
                 ) : (
                   <React.Fragment>
-                    <PopupPoller 
+                    <Popup
                       title="Authorize boyo.gg" 
                       width="400" 
                       height="800"
                       location="/login"
                       active={pending}
-                      onTimeout={() => setPending(false)}
-                      onDone={() => alert('we are authenticated')}
+                      onClose={() => alert('we are authenticated')}
                     />
                     <Button className="m-0" disabled={pending} color="accent" variant="raised" onClick={e => setPending(true)}>
                       <FontAwesomeIcon style={{verticalAlign: 'middle'}} size="lg" className="mr-1" icon={faDiscord}/> Add to Discord
                     </Button>
                     {pending && (
-                      <BarLoader color="#AE81FF" width="100%"/>
+                      <div style={{marginTop: '-4px'}}>
+                        <BarLoader color="#AE81FF" width="100%"/>
+                      </div>
                     )}
                   </React.Fragment>
                 )}

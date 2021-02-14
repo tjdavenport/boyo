@@ -16,16 +16,15 @@ module.exports = app => {
 
   const handle = handler => (req, res, next) => handler.call(null, req, res, next).catch(err => next(err));
   const authed = (req, res, next) => req.isAuthenticated() ? next() : res.sendStatus(401);
-  const setLsKey = lsKey => (req, res) => res.type('html').send(`
+  const suicideWindow = (req, res) => res.type('html').send(`
     <html><head><script>
-      window.localStorage.setItem('${lsKey}', ${req.isAuthenticated()});
       window.close();
     </script></head></html>
   `)
-  const discordios = config => (req, res, next) => discord.request({
-    headers: {Authorization: `Bearer ${req.user.accessToken}`},
+  const discordios = (config, asBot = true) => (req, res, next) => discord.request({
+    headers: {Authorization: asBot ? `Bot ${config.DISCORD_BOT_TOKEN}` : `Bearer ${req.user.accessToken}`},
     ...(typeof config === 'function' ? config(req) : config),
-  }).then(discordRes => res.status(discordRes.status).json(discordRes.data))
+  }).then(discordRes => res.set('Cache-Control', 'public, max-age=9').status(discordRes.status).json(discordRes.data))
     .catch(error => error.response ? res.status(error.response.status).json(error.response.data) : next(error));
 
   passport.use((() => {
@@ -33,7 +32,7 @@ module.exports = app => {
       scope: ['user_info', 'service'],
       clientID: config.NITRADO_APP_ID,
       clientSecret: config.NITRADO_APP_SECRET,
-      callbackURL: `${config.HOST}/add-service/nitrado/callback`,
+      callbackURL: `${config.ORIGIN}/add-service/nitrado/callback`,
       authorizationURL: config.NITRADO_AUTHORIZATION_URL,
       tokenURL: config.NITRADO_TOKEN_URL,
       passReqToCallback: true,
@@ -69,7 +68,7 @@ module.exports = app => {
     scope: ['identify', 'email', 'guilds'],
     clientID: config.DISCORD_CLIENT_ID,
     clientSecret: config.DISCORD_CLIENT_SECRET,
-    callbackURL: `${config.HOST}/login/callback`,
+    callbackURL: `${config.ORIGIN}/login/callback`,
     authorizationURL: config.DISCORD_AUTHORIZATION_URL,
     tokenURL: config.DISCORD_TOKEN_URL,
     state: true,
@@ -112,26 +111,34 @@ module.exports = app => {
     return res.sendFile(path.join(__dirname, '..', 'frontend', 'build', 'index.html'));
   }));*/
 
-  app.get('/api/users/@me', authed, discordios({url: '/users/@me'}));
-  app.get('/api/users/@me/guilds', authed, discordios({url: '/users/@me/guilds'}));
+
+  app.get('/api/users/@me', authed, discordios({url: '/users/@me'}, false));
+  app.get('/api/users/@me/guilds', authed, discordios({url: '/users/@me/guilds'}, false));
+  app.get('/api/guilds/:guildId', authed, discordios(req => ({
+    url: `/guilds/${req.params.guildId}`,
+  })));
   app.get('/api/guilds/:guildId/roles', authed, discordios(req => ({
     url: `/guilds/${req.params.guildId}/roles`,
-    headers: {
-      Authorization: `Bot ${config.DISCORD_BOT_TOKEN}`,
-    },
   })));
 
-  app.get('/:guildId/add-service/nitrado', authed, passport.authenticate('oauth2-nitrado'));
+  app.get('/api/guilds/:guildId/oauth2-links', authed, handle(async (req, res) => {
+    const oAuth2Links = await models.OAuth2Link.findAll({
+      where: {guildId: req.params.guildId},
+      attributes: ['type', 'guildId', 'createdAt', 'updatedAt']
+    });
+    return res.json(oAuth2Links.map(link => link.toJSON()));
+  }));
+  app.get('/api/authenticated', (req, res) => res.json(req.isAuthenticated()));
+
+  app.get('/guilds/:guildId/add-service/nitrado', authed, passport.authenticate('oauth2-nitrado'));
   app.get('/add-service/nitrado/callback', passport.authenticate('oauth2-nitrado', {
     //failureRedirect: '/login/failure'
-  }), setLsKey('service-added-nitrado'));
+  }), suicideWindow);
 
   app.get('/login', passport.authenticate('oauth2'));
   app.get('/login/callback', passport.authenticate('oauth2', {
     //failureRedirect: '/login/failure'
-  }), setLsKey('isAuthenticated'));
-
-  app.get('/add-server/:id', authed, setLsKey('added-server'));
+  }), suicideWindow);
 
   app.get('/', (req, res) => {
     return res.render('Home.jsx', {isAuthenticated: req.isAuthenticated()});

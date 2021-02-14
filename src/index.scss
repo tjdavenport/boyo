@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;500;700&family=Roboto+Mono:wght@300;400;700&display=swap');
 
+@import './styles/variables';
+
 $kbd-bg: #000;
+$link-hover-color: $color-libfunc;
 @import 'bootstrap/scss/_functions.scss';
 @import 'bootstrap/scss/_variables.scss';
 @import 'bootstrap/scss/_mixins.scss';
@@ -9,7 +12,6 @@ $kbd-bg: #000;
 @import 'bootstrap/scss/_grid.scss';
 @import 'bootstrap/scss/_code.scss';
 
-@import './styles/variables';
 @import './styles/mui';
 
 body {
@@ -17,7 +19,7 @@ body {
 }
 
 .nav {
-    background-color: darken($color-bg, 4%);
+    background-color: $color-bg;
 }
 .nav__nav {
 }
