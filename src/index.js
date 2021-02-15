@@ -57,9 +57,9 @@ const Server = () => {
   return (
     <React.Fragment>
       <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><Link to="/dashboard">Dashboard</Link></li>
-          <li class="breadcrumb-item active" aria-current="page">{decodeURI(uriServerName)}</li>
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item"><Link to="/dashboard">My Servers</Link></li>
+          <li className="breadcrumb-item active" aria-current="page">{decodeURI(uriServerName)}</li>
         </ol>
       </nav>
       <div className="container-fluid">
@@ -70,7 +70,7 @@ const Server = () => {
               {Object.keys(categories['nitrado-dayz'].botCommands).map(key => {
                 const botCommand = categories['nitrado-dayz'].botCommands[key];
                 return (
-                  <div className="col-sm-12 col-md-4 col-lg-3 mb-4">
+                  <div key={key} className="col-sm-12 col-md-4 col-lg-3 mb-4">
                     <div className="trianglify mui--z3" style={{width: '100%', height: '175px'}}>
                       <div className="trianglify__overlay"/>
                       <div className="trianglify__content px-3 pt-2">

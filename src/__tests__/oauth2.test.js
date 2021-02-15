@@ -20,8 +20,8 @@ describe('endopints involving oAuth2', () => {
     await client.get('/login');
     await new Promise((resolve, reject) => {
       setTimeout(() => {
-        client.get('/api/users/@me').then(({data}) => {
-          expect(data.id).toBe('252148211819610112');
+        client.get('/api/is-authenticated').then(({data}) => {
+          expect(data).toBe(true);
           resolve();
         }).catch(err => reject(err));
       }, 100);

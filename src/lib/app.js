@@ -22,7 +22,7 @@ module.exports = app => {
     </script></head></html>
   `)
   const discordios = config => (req, res, next) => discord.request({
-    headers: {Authorization: `Bot ${config.DISCORD_BOT_TOKEN}`,
+    headers: {Authorization: `Bot ${config.DISCORD_BOT_TOKEN}`},
     ...(typeof config === 'function' ? config(req) : config),
   }).then(discordRes => res.set('Cache-Control', 'public, max-stale=4').status(discordRes.status).json(discordRes.data))
     .catch(error => error.response ? res.status(error.response.status).json(error.response.data) : next(error));
