@@ -12,7 +12,10 @@ const OAuth2LinkSessionStore = require('./OAuth2LinkSessionStore');
 module.exports = app => {
   const log = app.get('log');
   const config = app.get('config');
-  const discord = axios.create({baseURL: config.DISCORD_API_URI});
+  const discord = axios.create({
+    baseURL: config.DISCORD_API_URI,
+    headers: {Authorization: `Bot ${config.DISCORD_BOT_TOKEN}`}
+  });
 
   const handle = handler => (req, res, next) => handler.call(null, req, res, next).catch(err => next(err));
   const authed = (req, res, next) => req.isAuthenticated() ? next() : res.sendStatus(401);
@@ -21,10 +24,8 @@ module.exports = app => {
       window.close();
     </script></head></html>
   `)
-  const discordios = config => (req, res, next) => discord.request({
-    headers: {Authorization: `Bot ${config.DISCORD_BOT_TOKEN}`},
-    ...(typeof config === 'function' ? config(req) : config),
-  }).then(discordRes => res.set('Cache-Control', 'public, max-stale=4').status(discordRes.status).json(discordRes.data))
+  const discordios = options => (req, res, next) => discord.request(typeof options === 'function' ? options(req) : options)
+    .then(discordRes => res.set('Cache-Control', 'public, max-stale=4').status(discordRes.status).json(discordRes.data))
     .catch(error => error.response ? res.status(error.response.status).json(error.response.data) : next(error));
 
   passport.use((() => {

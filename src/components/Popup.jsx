@@ -4,7 +4,7 @@ export default function Popup({title, width, height, location, active, onClose})
   useEffect(() => {
     if (active) {
       const popup = window.open(location, title, `height=${height},width=${width}`);
-      if (window.focus) {
+      if (popup.focus) {
         popup.focus();
       }
 

@@ -15,8 +15,8 @@ import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {BrowserRouter, Link, Switch, Route, useParams, useHistory} from 'react-router-dom';
 
 
-const addBotUrl = guildId => 
-  `https://discord.com/api/oauth2/authorize?client_id=${process.env.REACT_APP_CLIENT_ID}&scope=bot&permissions=1006758976&guild_id=${guildId}`;
+const addBotUrl = (guildId, perms) => 
+  `https://discord.com/api/oauth2/authorize?client_id=${process.env.REACT_APP_CLIENT_ID}&scope=bot&permissions=${perms}&guild_id=${guildId}`;
 
 const Servers = () => {
   const [{data: servers = [], loading: loadingServers}] = useDiscordios('/users/@me/guilds');
@@ -50,9 +50,62 @@ const Servers = () => {
   );
 }
 
+const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles, serverId}) => {
+  const [pending, setPending] = useState(false);
+
+  return (
+    <div className="col-sm-12 col-md-4 col-lg-3 mb-4">
+      <div className="trianglify mui--z3" style={{width: '100%', height: '175px'}}>
+        <div className="trianglify__overlay"/>
+        <div className="trianglify__content px-3 pt-2">
+          <div className="mui--text-title mb-2"><kbd>!{command}</kbd></div>
+          <p className="mb-3">{botCommand.description}</p>
+          {loading && (
+            <div className="d-flex">
+              <div>
+                <Button className="m-0" size="small" disabled color="accent" variant="raised">
+                  loading
+                </Button>
+                <div style={{marginTop: '-4px'}}>
+                  <BarLoader color="#AE81FF" width="100%"/>
+                </div>
+              </div>
+            </div>
+          )}
+          {!loading && (
+            <React.Fragment>
+              {(!hasPerms && !hasLinks) && (
+                <React.Fragment>
+                  <Popup
+                    title={`Enable ${command}`}
+                    width="400" 
+                    height="800"
+                    location={addBotUrl(serverId, botCommand.discordPerms.reduce((a, b) => a | b, 0))}
+                    active={pending}
+                    onClose={() => {
+                      getRoles()
+                      setPending(false);
+                    }}
+                  />
+                  <Button className="m-0" size="small" color="accent" variant="raised" onClick={() => setPending(true)}>
+                    <span className="mr-1"><FontAwesomeIcon icon={faPlug}/></span> Enable
+                  </Button>
+                </React.Fragment>
+              )}
+            </React.Fragment>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Server = () => {
   const {serverId, uriServerName} = useParams();
-  const [{data: server = {}, loading: loadingServer}] = useDiscordios(`/guilds/${serverId}`);
+  const [{data: roles = [], loading: loadingRoles}, getRoles] = useAxios(`/api/guilds/${serverId}/roles`);
+  const [{data: oAuth2Links = [], loading: loadingOAuth2Links}] = useAxios(`/api/guilds/${serverId}/oauth2-links`);
+
+  const boyoRole = roles.find(({tags}) => tags && tags['bot_id'] === '752638531972890726') || {};
 
   return (
     <React.Fragment>
@@ -69,19 +122,18 @@ const Server = () => {
             <div className="row">
               {Object.keys(categories['nitrado-dayz'].botCommands).map(key => {
                 const botCommand = categories['nitrado-dayz'].botCommands[key];
+                const hasPerms = botCommand.discordPerms.every(perm => (boyoRole.permissions & perm) == perm);
+                const hasLinks = botCommand.oAuth2Links.every(link => oAuth2Links.find(({type}) => type === link));
                 return (
-                  <div key={key} className="col-sm-12 col-md-4 col-lg-3 mb-4">
-                    <div className="trianglify mui--z3" style={{width: '100%', height: '175px'}}>
-                      <div className="trianglify__overlay"/>
-                      <div className="trianglify__content px-3 pt-2">
-                        <div className="mui--text-title mb-2"><kbd>!{key}</kbd></div>
-                        <p className="mb-3">{botCommand.description}</p>
-                        <Button className="m-0" size="small" color="accent" variant="raised">
-                          <span className="mr-1"><FontAwesomeIcon icon={faPlug}/></span> Enable
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                  <BotCommand 
+                    key={key} 
+                    serverId={serverId} 
+                    botCommand={botCommand} 
+                    getRoles={getRoles} 
+                    command={key}
+                    hasPerms={hasPerms}
+                    hasLink={hasLinks}
+                    loading={loadingRoles && loadingOAuth2Links}/>
                 );
               })}
             </div>

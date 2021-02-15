@@ -6,7 +6,6 @@ export default function Nav({profile = {}}) {
     <div className="color-bg mui--z1 p-3 d-flex align-items-center">
       <Logo/>
       <nav className="ml-5 flex-grow-1">
-        <a className="color-fg mr-3 " href="#">Servers</a>
         <a className="color-fg text-clear" href="#">Support</a>
       </nav>
       <nav className="ml-5 d-flex align-items-center">
