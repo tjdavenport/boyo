@@ -51,7 +51,9 @@ const Servers = () => {
 }
 
 const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles, serverId}) => {
-  const [pending, setPending] = useState(false);
+  const [pendingPerms, setPendingPerms] = useState(false);
+  const [pendingLinks, setPendingLinks] = useState(false);
+  const [linksModal, setLinksModal] = useState(false);
 
   return (
     <div className="col-sm-12 col-md-4 col-lg-3 mb-4">
@@ -61,37 +63,82 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles,
           <div className="mui--text-title mb-2"><kbd>!{command}</kbd></div>
           <p className="mb-3">{botCommand.description}</p>
           {loading && (
-            <div className="d-flex">
-              <div>
-                <Button className="m-0" size="small" disabled color="accent" variant="raised">
-                  loading
-                </Button>
-                <div style={{marginTop: '-4px'}}>
-                  <BarLoader color="#AE81FF" width="100%"/>
-                </div>
+            <div style={{display: 'inline-block'}}>
+              <Button className="m-0" size="small" disabled color="accent" variant="raised">
+                loading
+              </Button>
+              <div style={{marginTop: '-4px'}}>
+                <BarLoader color="#AE81FF" width="100%"/>
               </div>
             </div>
           )}
           {!loading && (
             <React.Fragment>
-              {(!hasPerms && !hasLinks) && (
-                <React.Fragment>
-                  <Popup
-                    title={`Enable ${command}`}
-                    width="400" 
-                    height="800"
-                    location={addBotUrl(serverId, botCommand.discordPerms.reduce((a, b) => a | b, 0))}
-                    active={pending}
-                    onClose={() => {
-                      getRoles()
-                      setPending(false);
-                    }}
-                  />
-                  <Button className="m-0" size="small" color="accent" variant="raised" onClick={() => setPending(true)}>
-                    <span className="mr-1"><FontAwesomeIcon icon={faPlug}/></span> Enable
-                  </Button>
-                </React.Fragment>
+              {linksModal && (
+                <div className="backdrop pt-5 pb-5">
+                  <div className="color-bg p-4 mui--z3" style={{width: '400px', margin: '0 auto'}}>
+                    <kbd className="mui--text-title">!{command}</kbd>
+                    <div className="pt-3">
+                      {botCommand.oAuth2Links.map(link => (
+                        <div key={link}>
+                          <p className="mb-4">This command requires a linked {link} account.</p>
+                          <div className="text-right">
+                            <Button size="small" variant="flat" onClick={() => setLinksModal(false)}>
+                              Cancel
+                            </Button>
+                            <Button size="small" variant="raised">
+                              Link {link} account
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               )}
+              {pendingPerms && (
+                <Popup
+                  title={`Enable ${command}`}
+                  width="400" 
+                  height="800"
+                  location={addBotUrl(serverId, botCommand.discordPerms.reduce((a, b) => a | b, 0))}
+                  onClose={() => {
+                    getRoles();
+                    setPendingPerms(false);
+                    !hasLinks && setLinksModal(true);
+                  }}
+                />
+              )}
+              {pendingLinks && (
+                <Popup
+                  title={`Link Nitrado Account`}
+                  width="400" 
+                  height="800"
+                  location={addBotUrl(serverId, botCommand.discordPerms.reduce((a, b) => a | b, 0))}
+                  onClose={() => {
+                    getRoles();
+                  }}
+                />
+              )}
+              <div style={{display: 'inline-block'}}>
+                <Button className="m-0" size="small" color="accent" disabled={pendingPerms || pendingLinks} variant="raised" onClick={() => {
+                  if (!hasPerms) {
+                    setPendingPerms(true);
+                    return;
+                  }
+                  if (!hasLinks) {
+                    setLinksModal(true);
+                    return;
+                  }
+                }}>
+                  <span className="mr-1"><FontAwesomeIcon icon={faPlug}/></span> Enable
+                </Button>
+                {pendingPerms || pendingLinks && (
+                  <div style={{marginTop: '-4px'}}>
+                    <BarLoader color="#AE81FF" width="100%"/>
+                  </div>
+                )}
+              </div>
             </React.Fragment>
           )}
         </div>

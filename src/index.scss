@@ -20,6 +20,16 @@ body {
     background-color: $color-bg-darker;
 }
 
+.backdrop {
+    background-color: rgba($color-bg-darker, 0.75);
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+    z-index: 9;
+}
+
 .nav {
     background-color: $color-bg;
 }

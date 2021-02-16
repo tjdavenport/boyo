@@ -15,7 +15,8 @@ $mui-primary-color-light: darken($color-libfunc, 15%);
 
 @import 'muicss/lib/sass/mui/_variables';
 $mui-btn-font-size: 16px;
-$mui-btn-flat-bg-color-hover: $color-variable;
+$mui-btn-flat-bg-color-hover: lighten(#000, 25%);
+
 $mui-base-font-color: $color-variable;
 $mui-base-font-family: 'Montserrat', Helvetica, Arial, Verdana, Tahoma;
 @import 'muicss/lib/sass/mui/_mixins';
@@ -26,3 +27,9 @@ $mui-base-font-family: 'Montserrat', Helvetica, Arial, Verdana, Tahoma;
 @import 'muicss/lib/sass/mui/_ripple';
 @import 'muicss/lib/sass/mui/_helpers';
 
+.mui-btn.mui-btn--flat {
+    color: $color-variable;
+    &:hover, &:focus {
+        color: $color-variable;
+    }
+}
