@@ -124,7 +124,7 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles,
                   width="400" 
                   height="800"
                   location={addBotUrl(serverId, botCommand.discordPerms.reduce((a, b) => a | b, 0))}
-                  onClose={() => getRoles()}
+                  onClose={() => getRoles().catch(err => setPendingPerms(false))}
                 />
               )}
               {pendingLinks && (
@@ -133,18 +133,16 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles,
                   width="400" 
                   height="800"
                   location={`/guilds/${serverId}/add-service/${pendingLinks}`}
-                  onClose={() => getLinks()}
+                  onClose={() => getLinks().then(({data: links}) => !links.map(({type}) => type).includes(pendingLinks) && setPendingLinks(false))}
                 />
               )}
               <div style={{display: 'inline-block'}}>
                 <Button className="m-0" size="small" color="accent" disabled={pendingPerms || pendingLinks} variant="raised" onClick={() => {
                   if (!hasPerms) {
-                    setPendingPerms(true);
-                    return;
+                    return setPendingPerms(true);
                   }
                   if (!hasLinks) {
-                    setLinksModal(true);
-                    return;
+                    return setLinksModal(true);
                   }
                 }}>
                   <span className="mr-1"><FontAwesomeIcon icon={faPlug}/></span> Enable
