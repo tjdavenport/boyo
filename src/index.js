@@ -50,10 +50,22 @@ const Servers = () => {
   );
 }
 
-const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles, serverId}) => {
+const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles, getLinks, serverId}) => {
   const [pendingPerms, setPendingPerms] = useState(false);
   const [pendingLinks, setPendingLinks] = useState(false);
   const [linksModal, setLinksModal] = useState(false);
+
+  useEffect(() => {
+    if (hasPerms && pendingPerms && !hasLinks) {
+      setLinksModal(true);
+      setPendingPerms(false);
+    }
+
+    if (hasLinks && linksModal && pendingLinks) {
+      setLinksModal(false);
+      setPendingLinks(false);
+    }
+  }, [hasLinks, hasPerms]);
 
   return (
     <div className="col-sm-12 col-md-4 col-lg-3 mb-4">
@@ -82,13 +94,23 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles,
                       {botCommand.oAuth2Links.map(link => (
                         <div key={link}>
                           <p className="mb-4">This command requires a linked {link} account.</p>
-                          <div className="text-right">
-                            <Button size="small" variant="flat" onClick={() => setLinksModal(false)}>
+                          <div className="d-flex align-items-center justify-content-end">
+                            <Button size="small" variant="flat" onClick={() => {
+                              setLinksModal(false);
+                              setPendingLinks(false);
+                            }}>
                               Cancel
                             </Button>
-                            <Button size="small" variant="raised">
-                              Link {link} account
-                            </Button>
+                            <div>
+                              <Button className="m-0 ml-2" size="small" disabled={pendingLinks} variant="raised" onClick={() => setPendingLinks(link)}>
+                                Link {link} account
+                              </Button>
+                              {pendingLinks && (
+                                <div style={{marginTop: '-4px'}}>
+                                  <BarLoader color="#272822" width="100%"/>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -102,22 +124,16 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles,
                   width="400" 
                   height="800"
                   location={addBotUrl(serverId, botCommand.discordPerms.reduce((a, b) => a | b, 0))}
-                  onClose={() => {
-                    getRoles();
-                    setPendingPerms(false);
-                    !hasLinks && setLinksModal(true);
-                  }}
+                  onClose={() => getRoles()}
                 />
               )}
               {pendingLinks && (
                 <Popup
-                  title={`Link Nitrado Account`}
+                  title={`Link ${pendingLinks} account`}
                   width="400" 
                   height="800"
-                  location={addBotUrl(serverId, botCommand.discordPerms.reduce((a, b) => a | b, 0))}
-                  onClose={() => {
-                    getRoles();
-                  }}
+                  location={`/guilds/${serverId}/add-service/${pendingLinks}`}
+                  onClose={() => getLinks()}
                 />
               )}
               <div style={{display: 'inline-block'}}>
@@ -133,7 +149,7 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles,
                 }}>
                   <span className="mr-1"><FontAwesomeIcon icon={faPlug}/></span> Enable
                 </Button>
-                {pendingPerms || pendingLinks && (
+                {(pendingPerms || pendingLinks) && (
                   <div style={{marginTop: '-4px'}}>
                     <BarLoader color="#AE81FF" width="100%"/>
                   </div>
@@ -150,7 +166,7 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles,
 const Server = () => {
   const {serverId, uriServerName} = useParams();
   const [{data: roles = [], loading: loadingRoles}, getRoles] = useAxios(`/api/guilds/${serverId}/roles`);
-  const [{data: oAuth2Links = [], loading: loadingOAuth2Links}] = useAxios(`/api/guilds/${serverId}/oauth2-links`);
+  const [{data: oAuth2Links = [], loading: loadingOAuth2Links}, getLinks] = useAxios(`/api/guilds/${serverId}/oauth2-links`);
 
   const boyoRole = roles.find(({tags}) => tags && tags['bot_id'] === '752638531972890726') || {};
 
@@ -177,6 +193,7 @@ const Server = () => {
                     serverId={serverId} 
                     botCommand={botCommand} 
                     getRoles={getRoles} 
+                    getLinks={getLinks}
                     command={key}
                     hasPerms={hasPerms}
                     hasLink={hasLinks}

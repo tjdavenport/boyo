@@ -1,6 +1,8 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useRef} from 'react';
 
 export default function Popup({title, width, height, location, onClose}) {
+  const closed = useRef();
+
   useEffect(() => {
     const popup = window.open(location, title, `height=${height},width=${width}`);
     if (window.focus) {
@@ -8,11 +10,20 @@ export default function Popup({title, width, height, location, onClose}) {
     }
 
     const interval = setInterval(() => {
-      if (popup.closed) {
+      if (popup && popup.closed) {
         clearInterval(interval);
         onClose();
+        closed.current = true;
       }
-    }, 250);
+    });
+
+    return () => {
+      if (!closed.current) {
+        clearInterval(interval);
+        onClose();
+        popup.close();
+      }
+    };
   }, []);
 
   return <></>

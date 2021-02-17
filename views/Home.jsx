@@ -33,14 +33,15 @@ export default function Home({isAuthenticated}) {
                   </Button>
                 ) : (
                   <React.Fragment>
-                    <Popup
-                      title="Authorize boyo.gg" 
-                      width="400" 
-                      height="800"
-                      location="/login"
-                      active={pending}
-                      onClose={() => checkAuthed()}
-                    />
+                    {pending && (
+                      <Popup
+                        title="Authorize boyo.gg" 
+                        width="400" 
+                        height="800"
+                        location="/login"
+                        onClose={() => checkAuthed()}
+                      />
+                    )}
                     <Button className="m-0" disabled={pending} color="accent" variant="raised" onClick={e => setPending(true)}>
                       <FontAwesomeIcon style={{verticalAlign: 'middle'}} size="lg" className="mr-1" icon={faDiscord}/> Add to Discord
                     </Button>
