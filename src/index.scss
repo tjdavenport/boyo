@@ -30,6 +30,13 @@ body {
     z-index: 9;
 }
 
+
+@include media-breakpoint-only(xs) {
+    .xs-90-width {
+        width: 90% !important;
+    }
+}
+
 .nav {
     background-color: $color-bg;
 }

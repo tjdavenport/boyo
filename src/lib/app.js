@@ -119,6 +119,19 @@ module.exports = app => {
     url: `/guilds/${req.params.guildId}/roles`,
   })));
 
+  app.patch('/api/guilds/:guildId/attached-bot-command', authed, handle(async (req, res) => {
+    const [attachedBotCommand, created] = await models.AttachedBotCommand.findOrCreate({
+      where: {guildId: req.params.guildId, key: req.body.key},
+      defaults: {config: req.body.config}
+    });
+    return res.json(attachedBotCommand.toJSON());
+  }));
+  app.get('/api/guilds/:guildId/attached-bot-commands', authed, handle(async (req, res) => {
+    const attachedBotCommands = await models.AttachedBotCommand.findAll({
+      where: {guildId: req.params.guildId},
+    });
+    return res.json(attachedBotCommands.map(command => command.toJSON()));
+  }));
   app.get('/api/guilds/:guildId/oauth2-links', authed, handle(async (req, res) => {
     const oAuth2Links = await models.OAuth2Link.findAll({
       where: {guildId: req.params.guildId},

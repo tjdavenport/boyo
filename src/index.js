@@ -50,9 +50,10 @@ const Servers = () => {
   );
 }
 
-const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles, getLinks, serverId}) => {
+const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, hasAttached, getRoles, getLinks, serverId}) => {
   const [pendingPerms, setPendingPerms] = useState(false);
   const [pendingLinks, setPendingLinks] = useState(false);
+  const [configModal, setConfigModal] = useState(false);
   const [linksModal, setLinksModal] = useState(false);
 
   useEffect(() => {
@@ -60,7 +61,6 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles,
       setLinksModal(true);
       setPendingPerms(false);
     }
-
     if (hasLinks && linksModal && pendingLinks) {
       setLinksModal(false);
       setPendingLinks(false);
@@ -88,7 +88,7 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles,
             <React.Fragment>
               {linksModal && (
                 <div className="backdrop pt-5 pb-5">
-                  <div className="color-bg p-4 mui--z3" style={{width: '400px', margin: '0 auto'}}>
+                  <div className="color-bg p-4 mui--z3 xs-90-width" style={{width: '400px', margin: '0 auto'}}>
                     <kbd className="mui--text-title">!{command}</kbd>
                     <div className="pt-3">
                       {botCommand.oAuth2Links.map(link => (
@@ -144,6 +144,9 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, getRoles,
                   if (!hasLinks) {
                     return setLinksModal(true);
                   }
+                  if (!hasAttached) {
+                    return setLinksModal(true);
+                  }
                 }}>
                   <span className="mr-1"><FontAwesomeIcon icon={faPlug}/></span> Enable
                 </Button>
@@ -165,6 +168,7 @@ const Server = () => {
   const {serverId, uriServerName} = useParams();
   const [{data: roles = [], loading: loadingRoles}, getRoles] = useAxios(`/api/guilds/${serverId}/roles`);
   const [{data: oAuth2Links = [], loading: loadingOAuth2Links}, getLinks] = useAxios(`/api/guilds/${serverId}/oauth2-links`);
+  const [{data: attachedBotCommands = [], loading: loadingAttachedBotCommands}, getAttachedBotCommands] = useAxios(`/api/guilds/${serverId}/attached-bot-commands`);
 
   const boyoRole = roles.find(({tags}) => tags && tags['bot_id'] === '752638531972890726') || {};
 
@@ -183,19 +187,18 @@ const Server = () => {
             <div className="row">
               {Object.keys(categories['nitrado-dayz'].botCommands).map(key => {
                 const botCommand = categories['nitrado-dayz'].botCommands[key];
-                const hasPerms = botCommand.discordPerms.every(perm => (boyoRole.permissions & perm) == perm);
-                const hasLinks = botCommand.oAuth2Links.every(link => oAuth2Links.find(({type}) => type === link));
                 return (
                   <BotCommand 
                     key={key} 
+                    command={key}
                     serverId={serverId} 
-                    botCommand={botCommand} 
                     getRoles={getRoles} 
                     getLinks={getLinks}
-                    command={key}
-                    hasPerms={hasPerms}
-                    hasLink={hasLinks}
-                    loading={loadingRoles && loadingOAuth2Links}/>
+                    botCommand={categories['nitrado-dayz'].botCommands[key]} 
+                    hasPerms={botCommand.discordPerms.every(perm => (boyoRole.permissions & perm) == perm)}
+                    hasLinks={botCommand.oAuth2Links.every(link => oAuth2Links.find(({type}) => type === link))}
+                    hasAttached={attachedBotCommands.map(({key: attachedKey}) => attachedKey).includes(key)}
+                    loading={loadingRoles || loadingOAuth2Links || loadingAttachedBotCommands}/>
                 );
               })}
             </div>
