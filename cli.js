@@ -3,8 +3,8 @@ const express = require('express');
 const bot = require('./src/lib/bot');
 const app = require('./src/lib/app');
 const log = require('./src/lib/log');
-const {sql, configure} = require('./src/lib/db');
 const {program} = require('commander');
+const {sql, configure, models} = require('./src/lib/db');
 const register = require('@react-ssr/express/register');
 
 configure(process.env);
@@ -50,8 +50,9 @@ configure(process.env);
 
   program
     .command('bot:login')
-    .action(() => {
-      bot.login(process.env.DISCORD_BOT_TOKEN);
+    .action(async () => {
+      const boyo = await bot(models());
+      boyo.login(process.env.DISCORD_BOT_TOKEN);
     });
 
   await program.parseAsync();

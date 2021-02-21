@@ -7,10 +7,8 @@ const cache = {
 };
 
 module.exports = {
-  models: cache.models,
-  sql: () => {
-    return cache.connection;
-  },
+  models: () => cache.models,
+  sql: () => cache.connection,
   configure: config => {
     const {
       DB_NAME,

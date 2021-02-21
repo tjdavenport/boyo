@@ -1,8 +1,8 @@
+const db = require('./db');
 const cors = require('cors');
 const axios = require('axios');
 const fsx = require('fs-extra');
 const passport = require('passport');
-const {sql, models} = require('./db');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const {Strategy} = require('passport-oauth2');
@@ -10,6 +10,7 @@ const MemoryStore = require('memorystore')(session);
 const OAuth2LinkSessionStore = require('./OAuth2LinkSessionStore');
 
 module.exports = app => {
+  const models = db.models();
   const log = app.get('log');
   const config = app.get('config');
   const discord = axios.create({
