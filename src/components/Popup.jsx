@@ -6,7 +6,7 @@ export default function Popup({title, width, height, location, onClose}) {
   useEffect(() => {
     const popup = window.open(location, title, `height=${height},width=${width}`);
     if (window.focus) {
-      popup.focus();
+      //popup.focus();
     }
 
     const interval = setInterval(() => {

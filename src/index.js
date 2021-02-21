@@ -13,7 +13,7 @@ import useAxios, {makeUseAxios} from 'axios-hooks';
 import PacmanLoader from 'react-spinners/PacmanLoader';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import React, {useState, useEffect, useMemo, useRef} from 'react';
-import {faPlug, faMinusCircle} from '@fortawesome/free-solid-svg-icons';
+import {faPlug, faMinusCircle, faWrench} from '@fortawesome/free-solid-svg-icons';
 import {BrowserRouter, Link, Switch, Route, useParams, useHistory} from 'react-router-dom';
 
 
@@ -52,10 +52,13 @@ const Servers = () => {
   );
 }
 
-const botCommandModals = {
-  'nitrado-dayz-restart': function Modal({command, botCommand, serverId, roles, config = {}}) {
+const NitradoDayZServer = ({command, botCommand, serverId, roles, config = {}, onDone, onCancel}) => {
     const [roleIds, setRoleIds] = useState(config.roleIds || []);
     const [{data: nitradoData, loading}] = useAxios(`/guilds/${serverId}/nitrado/services`);
+    const [{data, savingData, loading: saving}, saveCommand] = useAxios({
+      method: 'patch',
+      url: `/api/guilds/${serverId}/attached-bot-command`
+    }, {manual: true});
     const selectRole = useRef();
 
     useEffect(() => {
@@ -65,13 +68,23 @@ const botCommandModals = {
     }, [roleIds]);
 
     return (
-      <div className="backdrop pt-5 pb-1">
+      <div className="backdrop pt-5 pb-3">
         <div className="color-bg p-4 mui--z3 xs-90-width" style={{width: '400px', margin: '0 auto'}}>
           <kbd className="mui--text-title">!{command}</kbd>
           {loading ? <div className="py-3"><PacmanLoader color="#AE81FF" /></div> : (
-            <React.Fragment>
+            <form onSubmit={e => {
+              e.preventDefault();
+              const newConfig = {
+                serviceId: e.currentTarget.elements.serviceId.value,
+                roleIds,
+              };
+              saveCommand({
+                data: {guildId: serverId, key: command, config: newConfig}
+              }).then(() => onDone())
+                .catch(error => console.error(error));
+            }}>
               <div className="pt-3">
-                <Select name="serviceId" required defaultValue="" id="select-service">
+                <Select name="serviceId" required disabled={saving} defaultValue={config.serviceId || ''} id="select-service">
                   <Option value="" label="Select DayZ Server"/>
                   {nitradoData.data.services.filter(({details}) => details.game.includes('DayZ')).map(service => (
                     <Option value={service.id} label={service.details.name} key={service.id}/>
@@ -79,29 +92,52 @@ const botCommandModals = {
                 </Select>
               </div>
               <div className="pt-3">
-                <p className="mui--text-caption mb-1">Only members with these roles can use the command.</p>
-                <Select name="roles" ref={selectRole} defaultValue="" id="select-roles" onChange={e => (e.target.value !== '') && setRoleIds([...roleIds, e.target.value])}>
+                <p className="mui--text-caption mb-1">Only members with these roles can use this command.</p>
+                <Select name="roles" ref={selectRole} defaultValue="" disabled={saving} id="select-roles" onChange={e => (e.target.value !== '') && setRoleIds([...roleIds, e.target.value])}>
                   <Option value="" label="Select authorized roles"/>
                   {roles.filter(({managed, id}) => (!managed && !roleIds.includes(id))).map(role => (
                     <Option value={role.id} label={role.name} key={role.id}/>
                   ))}
                 </Select>
                 {roleIds.map(roleId => (
-                  <Button className="mb-2" size="small" variant="flat" onClick={() => setRoleIds(roleIds.filter(selectedRoleId => selectedRoleId !== roleId))}>
-                    <span className="mr-2"><FontAwesomeIcon icon={faMinusCircle}/></span>
-                    {roles.find(({id}) => id === roleId).name}
-                  </Button>
+                  <React.Fragment key={`remove-${roleId}`}>
+                    <Button className="mb-2" size="small" variant="flat" disabled={saving} onClick={() => setRoleIds(roleIds.filter(selectedRoleId => selectedRoleId !== roleId))}>
+                      <span className="mr-2"><FontAwesomeIcon icon={faMinusCircle}/></span>
+                      {roles.find(({id}) => id === roleId).name}
+                    </Button>
+                    <input type="hidden" name="roleIds[]" value={roleId}/>
+                  </React.Fragment>
                 ))}
               </div>
-            </React.Fragment>
+              <div className="d-flex align-items-center justify-content-end">
+                <Button size="small" variant="flat" type="button" onClick={() => onCancel()}>
+                  Cancel
+                </Button>
+                <div>
+                  <Button className="m-0 ml-2" size="small" disabled={saving} type="submit" variant="raised">
+                    Save
+                  </Button>
+                  {saving && (
+                    <div style={{marginTop: '-4px'}}>
+                      <BarLoader color="#272822" width="100%"/>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </form>
           )}
         </div>
       </div>
     );
-  }
 };
 
-const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, hasAttached, getRoles, getLinks, serverId, roles}) => {
+const botCommandModals = {
+  'nitrado-dayz-restart': NitradoDayZServer,
+  'nitrado-dayz-shutdown': NitradoDayZServer,
+  'nitrado-dayz-start': NitradoDayZServer
+};
+
+const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, hasAttached, getRoles, getLinks, getAttachedBotCommands, serverId, config, roles}) => {
   const [pendingPerms, setPendingPerms] = useState(false);
   const [pendingLinks, setPendingLinks] = useState(false);
   const [configModal, setConfigModal] = useState(false);
@@ -109,7 +145,6 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, hasAttach
   const ConfigModal = useMemo(() => botCommandModals[command], [command]);
 
   useEffect(() => {
-    console.log('executing hook');
     if (hasPerms && pendingPerms && !hasLinks) {
       setLinksModal(true);
       setPendingPerms(false);
@@ -140,57 +175,6 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, hasAttach
           )}
           {!loading && (
             <React.Fragment>
-              {configModal && <ConfigModal command={command} botCommand={botCommand} serverId={serverId} roles={roles}/>}
-              {linksModal && (
-                <div className="backdrop pt-5 pb-1">
-                  <div className="color-bg p-4 mui--z3 xs-90-width" style={{width: '400px', margin: '0 auto'}}>
-                    <kbd className="mui--text-title">!{command}</kbd>
-                    <div className="pt-3">
-                      {botCommand.oAuth2Links.map(link => (
-                        <div key={link}>
-                          <p className="mb-4">This command requires a linked {link} account.</p>
-                          <div className="d-flex align-items-center justify-content-end">
-                            <Button size="small" variant="flat" onClick={() => {
-                              setLinksModal(false);
-                              setPendingLinks(false);
-                            }}>
-                              Cancel
-                            </Button>
-                            <div>
-                              <Button className="m-0 ml-2" size="small" disabled={pendingLinks} variant="raised" onClick={() => setPendingLinks(link)}>
-                                Link {link} account
-                              </Button>
-                              {pendingLinks && (
-                                <div style={{marginTop: '-4px'}}>
-                                  <BarLoader color="#272822" width="100%"/>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-              {pendingPerms && (
-                <Popup
-                  title={`Enable ${command}`}
-                  width="400" 
-                  height="800"
-                  location={addBotUrl(serverId, botCommand.discordPerms.reduce((a, b) => a | b, 0))}
-                  onClose={() => getRoles().catch(err => setPendingPerms(false))}
-                />
-              )}
-              {pendingLinks && (
-                <Popup
-                  title={`Link ${pendingLinks} account`}
-                  width="400" 
-                  height="800"
-                  location={`/guilds/${serverId}/add-service/${pendingLinks}`}
-                  onClose={() => getLinks().then(({data: links}) => links.map(({type}) => type).includes(pendingLinks) && setPendingLinks(false))}
-                />
-              )}
               <div style={{display: 'inline-block'}}>
                 <Button className="m-0" size="small" color="accent" disabled={pendingPerms || pendingLinks} variant="raised" onClick={() => {
                   if (!hasPerms) {
@@ -199,11 +183,9 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, hasAttach
                   if (!hasLinks) {
                     return setLinksModal(true);
                   }
-                  if (!hasAttached) {
-                    return setConfigModal(true);
-                  }
+                  return setConfigModal(true);
                 }}>
-                  <span className="mr-1"><FontAwesomeIcon icon={faPlug}/></span> Enable
+                  <span className="mr-1"><FontAwesomeIcon icon={hasAttached ? faWrench : faPlug}/></span> {hasAttached ? 'Configure' : 'Enable'}
                 </Button>
                 {(pendingPerms || pendingLinks) && (
                   <div style={{marginTop: '-4px'}}>
@@ -212,6 +194,69 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, hasAttach
                 )}
               </div>
             </React.Fragment>
+          )}
+          {configModal && (
+            <ConfigModal 
+              onDone={() => {
+                getAttachedBotCommands();
+                setConfigModal(false);
+              }}
+              onCancel={() => setConfigModal(false)}
+              command={command}
+              botCommand={botCommand}
+              serverId={serverId}
+              config={config}
+              roles={roles}/>
+          )}
+          {linksModal && (
+            <div className="backdrop pt-5 pb-3">
+              <div className="color-bg p-4 mui--z3 xs-90-width" style={{width: '400px', margin: '0 auto'}}>
+                <kbd className="mui--text-title">!{command}</kbd>
+                <div className="pt-3">
+                  {botCommand.oAuth2Links.map(link => (
+                    <div key={link}>
+                      <p className="mb-4">This command requires a linked {link} account.</p>
+                      <div className="d-flex align-items-center justify-content-end">
+                        <Button size="small" variant="flat" onClick={() => {
+                          setLinksModal(false);
+                          setPendingLinks(false);
+                        }}>
+                          Cancel
+                        </Button>
+                        <div>
+                          <Button className="m-0 ml-2" size="small" disabled={pendingLinks} variant="raised" onClick={() => setPendingLinks(link)}>
+                            Link {link} account
+                          </Button>
+                          {pendingLinks && (
+                            <div style={{marginTop: '-4px'}}>
+                              <BarLoader color="#272822" width="100%"/>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {pendingPerms && (
+            <Popup
+              title={`Enable ${command}`}
+              width="400" 
+              height="800"
+              location={addBotUrl(serverId, botCommand.discordPerms.reduce((a, b) => a | b, 0))}
+              onClose={() => getRoles().catch(err => setPendingPerms(false))}
+            />
+          )}
+          {pendingLinks && (
+            <Popup
+              title={`Link ${pendingLinks} account`}
+              width="400" 
+              height="800"
+              location={`/guilds/${serverId}/add-service/${pendingLinks}`}
+              onClose={() => getLinks().then(({data: links}) => !links.map(({type}) => type).includes(pendingLinks) && setPendingLinks(false))}
+            />
           )}
         </div>
       </div>
@@ -224,7 +269,6 @@ const Server = () => {
   const [{data: roles = [], loading: loadingRoles}, getRoles] = useAxios(`/api/guilds/${serverId}/roles`);
   const [{data: oAuth2Links = [], loading: loadingOAuth2Links}, getLinks] = useAxios(`/api/guilds/${serverId}/oauth2-links`);
   const [{data: attachedBotCommands = [], loading: loadingAttachedBotCommands}, getAttachedBotCommands] = useAxios(`/api/guilds/${serverId}/attached-bot-commands`);
-
   const boyoRole = roles.find(({tags}) => tags && tags['bot_id'] === '752638531972890726') || {};
 
   return (
@@ -250,10 +294,12 @@ const Server = () => {
                     serverId={serverId} 
                     getRoles={getRoles} 
                     getLinks={getLinks}
+                    getAttachedBotCommands={getAttachedBotCommands}
                     botCommand={categories['nitrado-dayz'].botCommands[key]} 
                     hasPerms={botCommand.discordPerms.every(perm => (boyoRole.permissions & perm) == perm)}
                     hasLinks={botCommand.oAuth2Links.every(link => oAuth2Links.find(({type}) => type === link))}
                     hasAttached={attachedBotCommands.map(({key: attachedKey}) => attachedKey).includes(key)}
+                    config={(attachedBotCommands.find(({key: attachedKey}) => attachedKey === key) || {}).config}
                     loading={loadingRoles || loadingOAuth2Links || loadingAttachedBotCommands}/>
                 );
               })}

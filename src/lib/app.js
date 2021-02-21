@@ -135,10 +135,11 @@ module.exports = app => {
   })));
 
   app.patch('/api/guilds/:guildId/attached-bot-command', authed, handle(async (req, res) => {
-    const [attachedBotCommand, created] = await models.AttachedBotCommand.findOrCreate({
+    const [attachedBotCommand, built] = await models.AttachedBotCommand.findOrBuild({
       where: {guildId: req.params.guildId, key: req.body.key},
-      defaults: {config: req.body.config}
     });
+    attachedBotCommand.config = req.body.config;
+    await attachedBotCommand.save();
     return res.json(attachedBotCommand.toJSON());
   }));
   app.get('/api/guilds/:guildId/attached-bot-commands', authed, handle(async (req, res) => {
