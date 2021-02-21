@@ -16,6 +16,9 @@ module.exports = app => {
     baseURL: config.DISCORD_API_URI,
     headers: {Authorization: `Bot ${config.DISCORD_BOT_TOKEN}`}
   });
+  const nitrado = axios.create({
+    baseURL: config.NITRADO_API_URI,
+  });
 
   const handle = handler => (req, res, next) => handler.call(null, req, res, next).catch(err => next(err));
   const authed = (req, res, next) => req.isAuthenticated() ? next() : res.sendStatus(401);
@@ -27,6 +30,18 @@ module.exports = app => {
   const discordios = options => (req, res, next) => discord.request(typeof options === 'function' ? options(req) : options)
     .then(discordRes => res.set('Cache-Control', 'public, max-stale=4').status(discordRes.status).json(discordRes.data))
     .catch(error => error.response ? res.status(error.response.status).json(error.response.data) : next(error));
+  const nitradios = options => handle(async (req, res, next) => {
+    const oAuth2Link = await models.OAuth2Link.findOne({
+      where: {guildId: req.params.guildId, type: 'nitrado'}
+    });
+    return nitrado.request((({headers = {}, ...options}) => ({
+      ...options,
+      headers: {...headers, Authorization: `Bearer ${oAuth2Link.accessToken}`}
+    }))(typeof options === 'function' ? options(req) : options))
+      .then(nitradoRes => res.set('Cache-Control', 'public, max-stale=4').status(nitradoRes.status).json(nitradoRes.data))
+      .catch(error => error.response ? res.status(error.response.status).json(error.response.data) : next(error));
+  });
+
 
   passport.use((() => {
     const nitrado = new Strategy({
@@ -146,6 +161,9 @@ module.exports = app => {
   app.get('/add-service/nitrado/callback', passport.authenticate('oauth2-nitrado', {
     //failureRedirect: '/login/failure'
   }), suicideWindow);
+  app.get('/guilds/:guildId/nitrado/services', authed, nitradios(req => ({
+    url: `/services`,
+  })));
 
   app.get('/login', passport.authenticate('oauth2'));
   app.get('/login/callback', passport.authenticate('oauth2', {

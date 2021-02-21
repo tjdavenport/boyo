@@ -6,12 +6,14 @@ import Popup from './components/Popup';
 import {user, useDiscordios} from './auth';
 import {categories} from './lib/constants';
 import Button from 'muicss/lib/react/button';
-import React, {useState, useEffect} from 'react';
+import Select from 'muicss/lib/react/select';
+import Option from 'muicss/lib/react/option';
 import BarLoader from 'react-spinners/BarLoader';
 import useAxios, {makeUseAxios} from 'axios-hooks';
 import PacmanLoader from 'react-spinners/PacmanLoader';
-import {faPlug} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import React, {useState, useEffect, useMemo, useRef} from 'react';
+import {faPlug, faMinusCircle} from '@fortawesome/free-solid-svg-icons';
 import {BrowserRouter, Link, Switch, Route, useParams, useHistory} from 'react-router-dom';
 
 
@@ -50,18 +52,70 @@ const Servers = () => {
   );
 }
 
-const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, hasAttached, getRoles, getLinks, serverId}) => {
+const botCommandModals = {
+  'nitrado-dayz-restart': function Modal({command, botCommand, serverId, roles, config = {}}) {
+    const [roleIds, setRoleIds] = useState(config.roleIds || []);
+    const [{data: nitradoData, loading}] = useAxios(`/guilds/${serverId}/nitrado/services`);
+    const selectRole = useRef();
+
+    useEffect(() => {
+      if (selectRole.current) {
+        selectRole.current.value = '';
+      }
+    }, [roleIds]);
+
+    return (
+      <div className="backdrop pt-5 pb-1">
+        <div className="color-bg p-4 mui--z3 xs-90-width" style={{width: '400px', margin: '0 auto'}}>
+          <kbd className="mui--text-title">!{command}</kbd>
+          {loading ? <div className="py-3"><PacmanLoader color="#AE81FF" /></div> : (
+            <React.Fragment>
+              <div className="pt-3">
+                <Select name="serviceId" required defaultValue="" id="select-service">
+                  <Option value="" label="Select DayZ Server"/>
+                  {nitradoData.data.services.filter(({details}) => details.game.includes('DayZ')).map(service => (
+                    <Option value={service.id} label={service.details.name} key={service.id}/>
+                  ))}
+                </Select>
+              </div>
+              <div className="pt-3">
+                <p className="mui--text-caption mb-1">Only members with these roles can use the command.</p>
+                <Select name="roles" ref={selectRole} defaultValue="" id="select-roles" onChange={e => (e.target.value !== '') && setRoleIds([...roleIds, e.target.value])}>
+                  <Option value="" label="Select authorized roles"/>
+                  {roles.filter(({managed, id}) => (!managed && !roleIds.includes(id))).map(role => (
+                    <Option value={role.id} label={role.name} key={role.id}/>
+                  ))}
+                </Select>
+                {roleIds.map(roleId => (
+                  <Button className="mb-2" size="small" variant="flat" onClick={() => setRoleIds(roleIds.filter(selectedRoleId => selectedRoleId !== roleId))}>
+                    <span className="mr-2"><FontAwesomeIcon icon={faMinusCircle}/></span>
+                    {roles.find(({id}) => id === roleId).name}
+                  </Button>
+                ))}
+              </div>
+            </React.Fragment>
+          )}
+        </div>
+      </div>
+    );
+  }
+};
+
+const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, hasAttached, getRoles, getLinks, serverId, roles}) => {
   const [pendingPerms, setPendingPerms] = useState(false);
   const [pendingLinks, setPendingLinks] = useState(false);
   const [configModal, setConfigModal] = useState(false);
   const [linksModal, setLinksModal] = useState(false);
+  const ConfigModal = useMemo(() => botCommandModals[command], [command]);
 
   useEffect(() => {
+    console.log('executing hook');
     if (hasPerms && pendingPerms && !hasLinks) {
       setLinksModal(true);
       setPendingPerms(false);
     }
     if (hasLinks && linksModal && pendingLinks) {
+      setConfigModal(true);
       setLinksModal(false);
       setPendingLinks(false);
     }
@@ -86,8 +140,9 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, hasAttach
           )}
           {!loading && (
             <React.Fragment>
+              {configModal && <ConfigModal command={command} botCommand={botCommand} serverId={serverId} roles={roles}/>}
               {linksModal && (
-                <div className="backdrop pt-5 pb-5">
+                <div className="backdrop pt-5 pb-1">
                   <div className="color-bg p-4 mui--z3 xs-90-width" style={{width: '400px', margin: '0 auto'}}>
                     <kbd className="mui--text-title">!{command}</kbd>
                     <div className="pt-3">
@@ -133,7 +188,7 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, hasAttach
                   width="400" 
                   height="800"
                   location={`/guilds/${serverId}/add-service/${pendingLinks}`}
-                  onClose={() => getLinks().then(({data: links}) => !links.map(({type}) => type).includes(pendingLinks) && setPendingLinks(false))}
+                  onClose={() => getLinks().then(({data: links}) => links.map(({type}) => type).includes(pendingLinks) && setPendingLinks(false))}
                 />
               )}
               <div style={{display: 'inline-block'}}>
@@ -145,7 +200,7 @@ const BotCommand = ({botCommand, command, loading, hasPerms, hasLinks, hasAttach
                     return setLinksModal(true);
                   }
                   if (!hasAttached) {
-                    return setLinksModal(true);
+                    return setConfigModal(true);
                   }
                 }}>
                   <span className="mr-1"><FontAwesomeIcon icon={faPlug}/></span> Enable
@@ -191,6 +246,7 @@ const Server = () => {
                   <BotCommand 
                     key={key} 
                     command={key}
+                    roles={roles}
                     serverId={serverId} 
                     getRoles={getRoles} 
                     getLinks={getLinks}

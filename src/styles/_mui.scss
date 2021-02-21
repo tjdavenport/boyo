@@ -19,10 +19,20 @@ $mui-btn-flat-bg-color-hover: lighten(#000, 25%);
 
 $mui-base-font-color: $color-variable;
 $mui-base-font-family: 'Montserrat', Helvetica, Arial, Verdana, Tahoma;
+$mui-input-border-color-focus: $color-constant;
+$mui-input-border-color: $color-string;
+$mui-input-font-color: $color-variable;
+$mui-select-menu-bg-color: $color-bg-darker;
+$mui-select-menu-item-bg-color-hover: $color-bg;
+$mui-select-menu-item-bg-color-selected: $kbd-bg;
+
+
 @import 'muicss/lib/sass/mui/_mixins';
 @import 'muicss/lib/sass/mui/_globals';
 
 @import 'muicss/lib/sass/mui/_typography.scss';
+@import 'muicss/lib/sass/mui/_form';
+@import 'muicss/lib/sass/mui/_select';
 @import 'muicss/lib/sass/mui/_buttons';
 @import 'muicss/lib/sass/mui/_ripple';
 @import 'muicss/lib/sass/mui/_helpers';
