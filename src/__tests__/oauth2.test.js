@@ -12,12 +12,19 @@ const client = axios.create({
   withCredentials: true,
 });
 client.defaults.jar = new tough.CookieJar();
+client.interceptors.response.use(response => response, error => {
+  console.log(error.response.data);
+  return Promise.reject(error);
+});
 
 const guildId = '695309211608940674';
 
-describe('endopints involving oAuth2', () => {
-  it('creates a user and authenticates with Discord', async () => {
+describe('endpoints involving oAuth2', () => {
+  beforeEach(async () => {
     await client.get('/login');
+  });
+
+  it('creates a user and authenticates with Discord', async () => {
     await new Promise((resolve, reject) => {
       setTimeout(() => {
         client.get('/api/is-authenticated').then(({data}) => {
@@ -28,16 +35,26 @@ describe('endopints involving oAuth2', () => {
     });
   });
 
-  it('allows a user to create a connection with Nitrado', async () => {
-    await client.get(`/guilds/${guildId}/add-service/nitrado`);
+  describe('integration with nitrado', () => {
+    beforeEach(async () => {
+      await client.get(`/guilds/${guildId}/add-service/nitrado`);
+    });
 
-    await new Promise((resolve, reject) => {
-      setTimeout(() => {
-        client.get(`/api/guilds/${guildId}/oauth2-links`).then(({data}) => {
-          expect(data.map(({type}) => type)).toContain('nitrado');
-          resolve();
-        }).catch(err => reject(err));
-      }, 100);
+    it('creates an oauth2link of type nitrado', async () => {
+      await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          client.get(`/api/guilds/${guildId}/oauth2-links`).then(({data}) => {
+            expect(data.map(({type}) => type)).toContain('nitrado');
+            resolve();
+          }).catch(err => reject(err));
+        }, 100);
+      });
+    });
+
+    it('allows user to list their nitrado services', async () => {
+      const res = await client.get(`/api/guilds/${guildId}/nitrado/services`);
+      expect(res.data.status).toBe('success');
     });
   });
+
 });

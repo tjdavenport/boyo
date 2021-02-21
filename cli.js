@@ -3,6 +3,7 @@ const express = require('express');
 const bot = require('./src/lib/bot');
 const app = require('./src/lib/app');
 const log = require('./src/lib/log');
+const Discord = require('discord.js');
 const {program} = require('commander');
 const {sql, configure, models} = require('./src/lib/db');
 const register = require('@react-ssr/express/register');
@@ -51,7 +52,8 @@ configure(process.env);
   program
     .command('bot:login')
     .action(async () => {
-      const boyo = await bot(models());
+      const client = new Discord.Client();
+      const boyo = await bot(models(), client, log.bot);
       boyo.login(process.env.DISCORD_BOT_TOKEN);
     });
 

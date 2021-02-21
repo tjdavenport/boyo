@@ -128,13 +128,9 @@ module.exports = app => {
     return res.sendFile(path.join(__dirname, '..', 'frontend', 'build', 'index.html'));
   }));*/
 
-  app.get('/api/guilds/:guildId', authed, discordios(req => ({
-    url: `/guilds/${req.params.guildId}`,
-  })));
-  app.get('/api/guilds/:guildId/roles', authed, discordios(req => ({
-    url: `/guilds/${req.params.guildId}/roles`,
-  })));
-
+  /**
+   * internal rest endpoints
+   */
   app.patch('/api/guilds/:guildId/attached-bot-command', authed, handle(async (req, res) => {
     const [attachedBotCommand, built] = await models.AttachedBotCommand.findOrBuild({
       where: {guildId: req.params.guildId, key: req.body.key},
@@ -159,13 +155,26 @@ module.exports = app => {
   app.get('/api/is-authenticated', (req, res) => res.json(req.isAuthenticated()));
   app.get('/api/user', authed, (req, res) => res.json(req.user));
 
+  /**
+   * external service wrappers
+   */
+  app.get('/api/guilds/:guildId/nitrado/services', authed, nitradios(req => ({
+    url: `/services`,
+  })));
+  app.get('/api/guilds/:guildId', authed, discordios(req => ({
+    url: `/guilds/${req.params.guildId}`,
+  })));
+  app.get('/api/guilds/:guildId/roles', authed, discordios(req => ({
+    url: `/guilds/${req.params.guildId}/roles`,
+  })));
+
+  /**
+   * oauth2 integrations
+   */
   app.get('/guilds/:guildId/add-service/nitrado', authed, passport.authenticate('oauth2-nitrado'));
   app.get('/add-service/nitrado/callback', passport.authenticate('oauth2-nitrado', {
     //failureRedirect: '/login/failure'
   }), suicideWindow);
-  app.get('/guilds/:guildId/nitrado/services', authed, nitradios(req => ({
-    url: `/services`,
-  })));
 
   app.get('/login', passport.authenticate('oauth2'));
   app.get('/login/callback', passport.authenticate('oauth2', {

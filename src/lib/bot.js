@@ -1,8 +1,6 @@
-const log = require('./log');
-const Discord = require('discord.js');
 const constants = require('./constants');
 
-module.exports = async (models) => {
+module.exports = async (models, client, log) => {
   try {
     const attachedBotCommands = await models.AttachedBotCommand.findAll();
     const commands = attachedBotCommands.reduce((map, attachedCommand) => {
@@ -11,6 +9,8 @@ module.exports = async (models) => {
       return map;
     }, {});
 
+    log('constructed attached commands map');
+
     const oAuth2Links = await models.OAuth2Link.findAll();
     const links = oAuth2Links.reduce((map, oAuth2Link) => {
       !map[oAuth2Link.guildId] && (map[oAuth2Link.guildId] = {});
@@ -18,10 +18,14 @@ module.exports = async (models) => {
       return map;
     }, {});
 
-    const allCommands = Object
+    log('constructed oAuth2 links map');
+
+    const systemCommands = Object
       .values(constants.categories)
       .map(({botCommands}) => botCommands)
-      .reduce(((allCommandsMap, botCommands) => ({...allCommandsMap, ...botCommands})), {});
+      .reduce(((systemCommandsMap, botCommands) => ({...systemCommandsMap, ...botCommands})), {});
+
+    log('constructed system commands map');
 
     const memberCommands = member => {
       return Object.values(commands[member.guild.id] || []).filter(command => {
@@ -30,18 +34,14 @@ module.exports = async (models) => {
       });
     };
 
-    const client = new Discord.Client();
-
     client.on('ready', () => log.bot('boyo bot ready'));
     client.on('message', async msg => {
-      if (msg.content === '!help') {
-        const commandsToExplain = memberCommands(msg.member);
+      const availableCommands = memberCommands(msg.member);
 
-        if (commandsToExplain.length > 0) {
-          msg.reply(`Henlo boyo! Here's some commands available to you;\n${commandsToExplain.map(command => {
-            return `\`!${command.key}\` - ${allCommands[command.key].description}`;
-          }).join(`\n`)}`);
-        }
+      if ((msg.content === '!help') && (availableCommands.length > 0)) {
+        msg.reply(`henlo boyo! Here's some commands available to you;\n${availableCommands.map(command => {
+          return `\`!${command.key}\` - ${systemCommands[command.key].description}`;
+        }).join(`\n`)}`);
       }
     });
 
