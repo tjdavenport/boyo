@@ -1,6 +1,6 @@
 const constants = require('./constants');
 
-module.exports = async (models, client, log) => {
+module.exports = async (models, client, bus, log = () => {}) => {
   try {
     const cache = {
       commands: {},
@@ -25,9 +25,9 @@ module.exports = async (models, client, log) => {
         const attachedBotCommands = await models.AttachedBotCommand.findAll({
           where: {guildId: guildId}
         });
+        if (!cache.commands[guildId]) cache.commands[guildId] = {};
         cache.commands[guildId] = attachedBotCommands.reduce((map, attachedCommand) => {
-          !map[attachedCommand.guildId] && (map[attachedCommand.guildId] = {});
-          map[attachedCommand.guildId][attachedCommand.key] = attachedCommand.toJSON();
+          map[attachedCommand.key] = attachedCommand.toJSON();
           return map;
         }, {});
         log(`constructed attached commands map for ${guildId}`);
@@ -36,9 +36,9 @@ module.exports = async (models, client, log) => {
         const oAuth2Links = await models.OAuth2Link.findAll({
           where: {guildId: guildId}
         });
+        if (!cache.links[guildId]) cache.links[guildId] = {};
         cache.links[guildId] = oAuth2Links.reduce((map, oAuth2Link) => {
-          !map[oAuth2Link.guildId] && (map[oAuth2Link.guildId] = {});
-          map[oAuth2Link.guildId][oAuth2Link.type] = oAuth2Link.toJSON();
+          map[oAuth2Link.type] = oAuth2Link.toJSON();
           return map;
         }, {});
         log(`constructed oauth2 links map for ${guildId}`);
@@ -48,7 +48,7 @@ module.exports = async (models, client, log) => {
     client.on('ready', () => log.bot('boyo bot ready'));
     client.on('message', async msg => {
       try {
-        await ensureGuildCached(msg.member.guildId);
+        await ensureGuildCached(msg.member.guild.id);
         const availableCommands = memberCommands(msg.member);
 
         if ((msg.content === '!help') && (availableCommands.length > 0)) {

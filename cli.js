@@ -59,7 +59,7 @@ configure(process.env);
       const boyo = await bot(
         models(), 
         client, 
-        socketClient(`http://localhost:${socketPort}`) 
+        socketClient(`http://localhost:${socketPort}`),
         log.bot
       );
       boyo.login(process.env.DISCORD_BOT_TOKEN);
