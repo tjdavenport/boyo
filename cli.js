@@ -5,8 +5,10 @@ const app = require('./src/lib/app');
 const log = require('./src/lib/log');
 const Discord = require('discord.js');
 const {program} = require('commander');
-const {sql, configure, models} = require('./src/lib/db');
+const socketServer = require('socket.io');
+const socketClient = require('socket.io-client');
 const register = require('@react-ssr/express/register');
+const {sql, configure, models} = require('./src/lib/db');
 
 configure(process.env);
 
@@ -38,11 +40,12 @@ configure(process.env);
     });
 
   program
-    .command('serve <port>')
-    .action(async port => {
+    .command('serve <port> <socketPort>')
+    .action(async (port, socketPort) => {
       const boyo = express();
       boyo.set('config', process.env);
       boyo.set('log', log);
+      boyo.set('bus', socketServer(socketPort));
       app(boyo);
       await register(boyo);
       await boyo.start(port);
@@ -51,9 +54,14 @@ configure(process.env);
 
   program
     .command('bot:login')
-    .action(async () => {
+    .action(async (socketPort) => {
       const client = new Discord.Client();
-      const boyo = await bot(models(), client, log.bot);
+      const boyo = await bot(
+        models(), 
+        client, 
+        socketClient(`http://localhost:${socketPort}`) 
+        log.bot
+      );
       boyo.login(process.env.DISCORD_BOT_TOKEN);
     });
 

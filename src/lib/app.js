@@ -3,6 +3,7 @@ const cors = require('cors');
 const axios = require('axios');
 const fsx = require('fs-extra');
 const passport = require('passport');
+const EventEmitter = require('events');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const {Strategy} = require('passport-oauth2');
@@ -13,6 +14,8 @@ module.exports = app => {
   const models = db.models();
   const log = app.get('log');
   const config = app.get('config');
+  const bus = app.get('bus') || new EventEmitter();
+
   const discord = axios.create({
     baseURL: config.DISCORD_API_URI,
     headers: {Authorization: `Bot ${config.DISCORD_BOT_TOKEN}`}
@@ -57,23 +60,24 @@ module.exports = app => {
       store: new OAuth2LinkSessionStore({key: 'oauth2-nitrado'})
     }, async (req, accessToken, refreshToken, profile, done) => {
       try {
-        log.auth(`attempting to create nitrado oauth2 service for user ${req.user.id}`);
+        log.auth(`attempting to create nitrado oauth2 link for user ${req.user.id}`);
         const [uuid, guildId] = req.query.state.split(':');
 
-        log.auth(`attempting to create nitrado oauth2 service for guild ${guildId}`);
-        const [service] = await models.OAuth2Link.findOrCreate({
+        log.auth(`attempting to create nitrado oauth2 link for guild ${guildId}`);
+        const [link] = await models.OAuth2Link.findOrCreate({
           where: {type: 'nitrado', refreshToken, guildId}
         });
+        bus.emit('guild-bust', guildId);
       
-        service.accessToken = accessToken;
-        service.refreshToken = refreshToken;
-        service.guildId = guildId;
-        await service.save();
+        link.accessToken = accessToken;
+        link.refreshToken = refreshToken;
+        link.guildId = guildId;
+        await link.save();
 
-        log.auth(`created nitrado oauth2 service for user ${req.user.id}`);
+        log.auth(`created nitrado oauth2 link for user ${req.user.id}`);
         done(undefined, req.user);
       } catch (error) {
-        log.auth(`failed to create nitrado oauth2 service for user ${req.user.id}`);
+        log.auth(`failed to create nitrado oauth2 link for user ${req.user.id}`);
         console.error(error);
         done(undefined, error);
       }
@@ -137,6 +141,7 @@ module.exports = app => {
     });
     attachedBotCommand.config = req.body.config;
     await attachedBotCommand.save();
+    bus.emit('guild-bust', req.params.guildId);
     return res.json(attachedBotCommand.toJSON());
   }));
   app.get('/api/guilds/:guildId/attached-bot-commands', authed, handle(async (req, res) => {

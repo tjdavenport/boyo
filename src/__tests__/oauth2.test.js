@@ -1,22 +1,9 @@
 /**
  * @jest-environment node
  */
-const axios = require('axios');
-const tough = require('tough-cookie');
-const boyo = require('../__mocks__/boyo');
-const axiosCookieJarSupport = require('axios-cookiejar-support').default;
+const httpCustomer = require('httpCustomer');
 
-axiosCookieJarSupport(axios);
-const client = axios.create({
-  baseURL: 'http://localhost:1337',
-  withCredentials: true,
-});
-client.defaults.jar = new tough.CookieJar();
-client.interceptors.response.use(response => response, error => {
-  console.log(error.response.data);
-  return Promise.reject(error);
-});
-
+const client = httpCustomer();
 const guildId = '695309211608940674';
 
 describe('endpoints involving oAuth2', () => {
