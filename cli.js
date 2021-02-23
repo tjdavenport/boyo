@@ -57,6 +57,7 @@ configure(process.env);
     .action(async (socketPort) => {
       const client = new Discord.Client();
       const boyo = await bot(
+        process.env,
         models(), 
         client, 
         socketClient(`http://localhost:${socketPort}`),

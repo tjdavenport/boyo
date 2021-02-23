@@ -166,6 +166,9 @@ module.exports = app => {
   app.get('/api/guilds/:guildId/nitrado/services', authed, nitradios(req => ({
     url: `/services`,
   })));
+  app.get('/api/guilds/:guildId/nitrado/services/:serviceId/logs', authed, nitradios(req => ({
+    url: `/services/${req.params.serviceId}/logs`,
+  })));
   app.get('/api/guilds/:guildId', authed, discordios(req => ({
     url: `/guilds/${req.params.guildId}`,
   })));

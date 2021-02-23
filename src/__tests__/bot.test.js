@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 const db = require('db');
+const config = require('config');
 const bot = require('../lib/bot');
 const EventEmitter = require('events');
 const httpCustomer = require('httpCustomer');
@@ -29,7 +30,7 @@ describe('discord bot client', () => {
     const guildId = '12345';
     const msg = mockMsg(guildId);
 
-    await bot(db.models(), client, socket);
+    await bot(config, db.models(), client, socket);
     await customer.get('/login');
     await customer.get(`/guilds/${guildId}/add-service/nitrado`);
 
@@ -60,7 +61,22 @@ describe('discord bot client', () => {
       content: '!help',
       onReply: noReply
     }));
-
     expect(noReply).not.toHaveBeenCalled();
+
+    await new Promise(resolve => {
+      client.emit('message', msg({
+        roleIds: [23456],
+        content: '!nitrado-dayz-restart',
+        onReply: reply => {
+          expect(reply).toContain('restarting');
+          resolve();
+        }
+      }));
+    });
+
+    await customer.get(`/api/guilds/${guildId}/nitrado/services/54321/logs`)
+      .then(({data}) => {
+        expect(data.data.logs.map(({message}) => message)).toContain('Server restarted.');
+      });
   });
 });

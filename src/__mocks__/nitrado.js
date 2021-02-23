@@ -42,6 +42,17 @@ app.post('/api/oauth2/token', (req, res, next) => {
 /**
  * integration mocks
  */
+const serviceLogs = [];
+app.post('/api/services/:serviceId/gameservers/restart', (req, res, next) => {
+  serviceLogs.push({message: 'Server restarted.'});
+  return res.json({'status': 'success', 'message': 'Server is restarting ...'});
+});
+app.get('/api/services/:serviceId/logs', (req, res, next) => {
+  return res.json({
+    status: 'success',
+    data: {logs: serviceLogs}
+  });
+});
 app.get('/api/services', (req, res, next) => {
   return res.json({
     "status": "success",

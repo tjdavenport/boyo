@@ -1,6 +1,21 @@
+const axios = require('axios');
 const constants = require('./constants');
 
-module.exports = async (models, client, bus, log = () => {}) => {
+const commandBodies = {
+  'nitrado-dayz-restart': async (config, attachedCommand, oAuth2Links, msg) => {
+    axios.post(`${config.NITRADO_API_URI}/services/${attachedCommand.config.serviceId}/gameservers/restart`, null, {
+      headers: {
+        Authorization: `Bearer ${oAuth2Links['nitrado'].accessToken}`
+      }
+    }).then(res => msg.reply('the DayZ server is restarting...'))
+      .catch(error => {
+        console.error(error);
+        msg.reply('error encountered while restarting DayZ server');
+      });
+  },
+};
+
+module.exports = async (config, models, client, bus, log = () => {}) => {
   try {
     const cache = {
       commands: {},
@@ -45,16 +60,24 @@ module.exports = async (models, client, bus, log = () => {}) => {
       }
     };
 
-    client.on('ready', () => log.bot('boyo bot ready'));
+    client.on('ready', () => log('boyo bot ready'));
     client.on('message', async msg => {
       try {
         await ensureGuildCached(msg.member.guild.id);
         const availableCommands = memberCommands(msg.member);
 
         if ((msg.content === '!help') && (availableCommands.length > 0)) {
-          msg.reply(`henlo boyo! Here's some commands available to you;\n${availableCommands.map(command => {
+          return msg.reply(`henlo boyo! Here's some commands available to you;\n${availableCommands.map(command => {
             return `\`!${command.key}\` - ${systemCommands[command.key].description}`;
           }).join(`\n`)}`);
+        }
+
+        for (const command of availableCommands) {
+          if (msg.content.startsWith('!' + command.key)) {
+            log(`running command ${command.key} for guild ${msg.member.guild.id}`);
+            await commandBodies[command.key](config, command, cache.links[msg.member.guild.id], msg);
+            break;
+          }
         }
       } catch (error) {
         console.error(error);
