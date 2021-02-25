@@ -54,7 +54,7 @@ const Servers = () => {
 
 const NitradoDayZServer = ({command, botCommand, serverId, roles, config = {}, onDone, onCancel}) => {
     const [roleIds, setRoleIds] = useState(config.roleIds || []);
-    const [{data: nitradoData, loading}] = useAxios(`/guilds/${serverId}/nitrado/services`);
+    const [{data: nitradoData, loading}] = useAxios(`/api/guilds/${serverId}/nitrado/services`);
     const [{data, savingData, loading: saving}, saveCommand] = useAxios({
       method: 'patch',
       url: `/api/guilds/${serverId}/attached-bot-command`

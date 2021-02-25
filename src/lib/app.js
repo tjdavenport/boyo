@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const {Strategy} = require('passport-oauth2');
 const MemoryStore = require('memorystore')(session);
+const {default: axiosRefresh} = require('axios-auth-refresh');
 const OAuth2LinkSessionStore = require('./OAuth2LinkSessionStore');
 
 module.exports = app => {
@@ -20,9 +21,6 @@ module.exports = app => {
     baseURL: config.DISCORD_API_URI,
     headers: {Authorization: `Bot ${config.DISCORD_BOT_TOKEN}`}
   });
-  const nitrado = axios.create({
-    baseURL: config.NITRADO_API_URI,
-  });
 
   const handle = handler => (req, res, next) => handler.call(null, req, res, next).catch(err => next(err));
   const authed = (req, res, next) => req.isAuthenticated() ? next() : res.sendStatus(401);
@@ -34,10 +32,30 @@ module.exports = app => {
   const discordios = options => (req, res, next) => discord.request(typeof options === 'function' ? options(req) : options)
     .then(discordRes => res.set('Cache-Control', 'public, max-stale=4').status(discordRes.status).json(discordRes.data))
     .catch(error => error.response ? res.status(error.response.status).json(error.response.data) : next(error));
+
   const nitradios = options => handle(async (req, res, next) => {
     const oAuth2Link = await models.OAuth2Link.findOne({
       where: {guildId: req.params.guildId, type: 'nitrado'}
     });
+
+    const nitrado = axios.create({
+      baseURL: config.NITRADO_API_URI,
+    });
+
+    axiosRefresh(nitrado, failedReq => axios.post(config.NITRADO_TOKEN_URL, {
+      'client_id': config.NITRADO_APP_ID,
+      'client_secret': config.NITRADO_APP_SECRET,
+      'grant_type': 'refresh_token',
+      'refresh_token': oAuth2Link.refreshToken
+    }).then(refreshRes => {
+      oAuth2Link.save({
+        accessToken: refreshRes.data['access_token'],
+        refreshToken: refreshRes.data['refresh_token']
+      });
+      failedReq.response.config.headers['Authorization'] = 'Bearer ' + refreshRes.data['access_token'];
+      return Promise.resolve();
+    }));
+
     return nitrado.request((({headers = {}, ...options}) => ({
       ...options,
       headers: {...headers, Authorization: `Bearer ${oAuth2Link.accessToken}`}
