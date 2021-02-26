@@ -60,6 +60,11 @@ module.exports = async (config, models, client, bus, log = () => {}) => {
       }
     };
 
+    bus.on('guild-bust', guildId => {
+      ensureGuildCached(guildId, true);
+      log(`guild ${guildId} cache busted`);
+    });
+
     client.on('ready', () => log('boyo bot ready'));
     client.on('message', async msg => {
       try {
