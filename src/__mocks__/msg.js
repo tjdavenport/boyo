@@ -1,6 +1,6 @@
 let lastId = 1;
 
-module.exports = guildId => ({memberId = '91836957238357', roleIds = [Symbol()], content, onReply = () => {}, onChannelCreate = () => {}, onMsg = () => {}}) => {
+module.exports = guildId => ({memberId = '91836957238357', roleIds = [Symbol()], content, onReply = () => {}, }) => {
   const roles = {
     _roles_: [
       {
@@ -26,15 +26,19 @@ module.exports = guildId => ({memberId = '91836957238357', roleIds = [Symbol()],
     create: (name, options = {}) => {
       return new Promise(resolve => {
         const id = lastId++;
+        const messages = [];
+
         const channel = {
-          send: msg => onMsg({channel, msg}),
+          mocked: {
+            messages,
+          },
+          send: msg => messages.push(msg),
           id,
           name,
           ...options,
           type: options.type || 'text',
         };
         channels._channels_.push(channel);
-        onChannelCreate(channel);
         return resolve(channel);
       });
     },
@@ -46,8 +50,13 @@ module.exports = guildId => ({memberId = '91836957238357', roleIds = [Symbol()],
     roles,
   };
 
+  const replies = [];
+
   return {
-    reply: msg => onReply(msg),
+    mocked: {
+      replies
+    },
+    reply: msg => replies.push(msg),
     content,
     guild,
     member: {

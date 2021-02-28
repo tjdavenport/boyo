@@ -42,8 +42,8 @@ const ensureGuildCached = async (models, guildId, bust = false) => {
 
 const memberCommands = member => {
   return Object.values(cache.commands[member.guild.id] || []).filter(command => {
-    return !command.roleIds || ((command.roleIds.length > 0) && 
-      command.roleIds.some(roleId => member.roles.cache.keyArray().includes(roleId)));
+    return !command.config.roleIds || ((command.config.roleIds.length > 0) && 
+      command.config.roleIds.some(roleId => member.roles.cache.keyArray().includes(roleId)));
   });
 };
 
@@ -111,10 +111,13 @@ module.exports = async (config, models, client, bus, log = () => {}) => {
         await ensureGuildCached(models, msg.member.guild.id);
         const availableCommands = memberCommands(msg.member);
 
+        console.log(availableCommands);
+
         if ((msg.content === '!help') && (availableCommands.length > 0)) {
-          return msg.reply(`henlo boyo! Here's some commands available to you;\n${availableCommands.map(command => {
+          msg.reply(`henlo boyo! Here's some commands available to you;\n${availableCommands.map(command => {
             return `\`!${command.key}\` - ${systemCommands[command.key].description}`;
           }).join(`\n`)}`);
+          return msg;
         }
 
         for (const command of availableCommands) {
@@ -128,6 +131,8 @@ module.exports = async (config, models, client, bus, log = () => {}) => {
             break;
           }
         }
+
+        return msg;
       } catch (error) {
         console.error(error);
       }

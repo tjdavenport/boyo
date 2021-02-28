@@ -1,7 +1,7 @@
 const bot = require('./lib/bot');
 const db = require('./__mocks__/db');
-const EventEmitter = require('events');
 const config = require('./__mocks__/config');
+const EventEmitter = require('eventemitter2');
 const socketClient = require('socket.io-client');
 const NodeEnvironment = require('jest-environment-node');
 

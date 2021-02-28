@@ -86,6 +86,7 @@
     "@storybook/preset-create-react-app": "^3.1.5",
     "@storybook/react": "^6.1.17",
     "axios-cookiejar-support": "^1.0.1",
+    "eventemitter2": "^6.4.4",
     "tough-cookie": "^3.0.1"
   }
 }
