@@ -14,7 +14,7 @@ exports.categories = {
     name: 'Auto Factions',
     botCommands: {
       'create-faction': {
-        description: 'Create a faction role.',
+        description: 'Create a private faction channel & custom role',
         discordPerms: [dPerms.readMessageHistory, dPerms.sendMessages, dPerms.addReactions, dPerms.manageRoles, dPerms.manageChannels, dPerms.viewChannel],
         oAuth2Links: [],
       },

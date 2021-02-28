@@ -30,12 +30,18 @@ describe('discord bot client', () => {
         }
       })));
 
+      const memberId = '999888777666';
       new Promise(resolve => global.client.emit('message', msg({
+        memberId,
         content: '!create-faction',
-        onReply: reply => {
-          expect(reply).toContain('create-faction');
+        onChannelCreate: channel => {
+          expect(channel.name).toContain('new-faction');
           resolve();
-        }
+        },
+        onMsg: ({channel, msg: createMsg}) => {
+          expect(channel.name).toContain('new-faction');
+          expect(createMsg).toContain(`<@${memberId}>`);
+        },
       })));
     });
   });

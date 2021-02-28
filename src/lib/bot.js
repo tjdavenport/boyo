@@ -56,7 +56,7 @@ const systemCommands = Object
   })), {});
 
 const commandBodies = {
-  'nitrado-dayz-restart': async (config, attachedCommand, oAuth2Links, msg) => {
+  'nitrado-dayz-restart': async (config, attachedCommand, oAuth2Links, msg, models) => {
     axios.post(`${config.NITRADO_API_URI}/services/${attachedCommand.config.serviceId}/gameservers/restart`, null, {
       headers: {
         Authorization: `Bearer ${oAuth2Links['nitrado'].accessToken}`
@@ -66,6 +66,35 @@ const commandBodies = {
         console.error(error);
         msg.reply('error encountered while restarting DayZ server');
       });
+  },
+  'create-faction': async (config, attachedCommand, oAuth2Links, msg, models) => {
+    const everyone = msg.guild.roles.cache.find(role => role.name === '@everyone');
+    const boyo = msg.guild.roles.cache.find(role => (role.name === 'boyo.gg') && role.managed);
+    const channel = await msg.guild.channels.create('new-faction', {
+      permissionOverwrites: [
+        {type: 'role', id: everyone.id, deny: ['VIEW_CHANNEL']},
+        {type: 'role', id: boyo.id, allow: ['VIEW_CHANNEL']},
+        {type: 'user', id: msg.member.id, allow: ['VIEW_CHANNEL']}
+      ],
+    });
+    channel.send(`${msg.member.toString()}, it's time to setup your faction! What do you want to call it?`);
+
+    const autoFaction = await models.AutoFaction.create({
+      leaderId: msg.member.id,
+      guildId: msg.guild.id,
+      channelId: channel.id,
+    });
+    cache.autoFactions[msg.guild.id][channel.id] = autoFaction.toJSON();
+
+    setTimeout(() => {
+      channel.fetch(true).then(latestChannel => {
+        if (channel.name === 'new-faction') {
+          delete cache.autoFactions[guildId][channel.id];
+          channel.delete().catch(error => console.error(error));
+          autoFaction.detroy().catch(error => console.error(error));
+        }
+      });
+    }, 300000);
   },
 };
 
@@ -95,7 +124,7 @@ module.exports = async (config, models, client, bus, log = () => {}) => {
             }
 
             log(`running command ${command.key} for guild ${msg.member.guild.id}`);
-            await commandBodies[command.key]?.(config, command, cache.links[msg.member.guild.id], msg);
+            await commandBodies[command.key]?.(config, command, cache.links[msg.member.guild.id], msg, models);
             break;
           }
         }

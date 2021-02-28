@@ -304,6 +304,27 @@ const Server = () => {
                 );
               })}
             </div>
+            <div className="row">
+              {Object.keys(categories['auto-factions'].botCommands).map(key => {
+                const botCommand = categories['auto-factions'].botCommands[key];
+                return (
+                  <BotCommand 
+                    key={key} 
+                    command={key}
+                    roles={roles}
+                    serverId={serverId} 
+                    getRoles={getRoles} 
+                    getLinks={getLinks}
+                    getAttachedBotCommands={getAttachedBotCommands}
+                    botCommand={categories['auto-factions'].botCommands[key]} 
+                    hasPerms={botCommand.discordPerms.every(perm => (boyoRole.permissions & perm) == perm)}
+                    hasLinks={botCommand.oAuth2Links.every(link => oAuth2Links.find(({type}) => type === link))}
+                    hasAttached={attachedBotCommands.map(({key: attachedKey}) => attachedKey).includes(key)}
+                    config={(attachedBotCommands.find(({key: attachedKey}) => attachedKey === key) || {}).config}
+                    loading={loadingRoles || loadingOAuth2Links || loadingAttachedBotCommands}/>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
