@@ -84,6 +84,24 @@ module.exports = {
           allowNull: true
         },
       }),
+      AutoFaction: sql.define('AutoFaction', {
+        guildId: {
+          type: DataTypes.STRING(255),
+          allowNull: false
+        },
+        leaderId: {
+          type: DataTypes.STRING(255),
+          allowNull: false
+        },
+        channelId: {
+          type: DataTypes.STRING(255),
+          allowNull: false
+        },
+        roleId: {
+          type: DataTypes.STRING(255),
+          allowNull: true
+        },
+      }),
     }).forEach(([key, model]) => cache.models[key] = model);
   },
 };

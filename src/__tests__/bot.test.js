@@ -1,23 +1,45 @@
 /**
  * @jest-environment ./src/DiscordEnvironment
  */
+const mockMsg = require('msg');
 const httpCustomer = require('httpCustomer');
 const constants = require('../lib/constants');
 
-const mockMsg = guildId => ({roleIds = [], content, onReply = () => {}}) => ({
-  reply: msg => onReply(msg),
-  content,
-  member: {
-    guild: {id: guildId},
-    roles: {
-      cache: {
-        keyArray: () => roleIds
-      }
-    }
-  },
-})
-
 describe('discord bot client', () => {
+  describe('auto factions', () => {
+    it('supports creating a faction', async () => {
+      const customer = httpCustomer();
+      const guildId = '54321';
+      const msg = mockMsg(guildId);
+
+      await customer.get('/login');
+
+      customer.patch(`/api/guilds/${guildId}/attached-bot-command`, {
+        key: 'create-faction', config: {}
+      });
+      await new Promise(resolve => global.socket.once('guild-bust', bustedGuildId => {
+        expect(bustedGuildId).toBe(guildId);
+        resolve();
+      }));
+
+      new Promise(resolve => global.client.emit('message', msg({
+        content: '!help',
+        onReply: reply => {
+          expect(reply).toContain('create-faction');
+          resolve();
+        }
+      })));
+
+      new Promise(resolve => global.client.emit('message', msg({
+        content: '!create-faction',
+        onReply: reply => {
+          expect(reply).toContain('create-faction');
+          resolve();
+        }
+      })));
+    });
+  });
+
   it('supports console dayz server management', async () => {
     const customer = httpCustomer();
     const guildId = '12345';
@@ -27,7 +49,6 @@ describe('discord bot client', () => {
     await customer.get(`/guilds/${guildId}/add-service/nitrado`);
 
     global.client.emit('message', msg({
-      roleIds: [],
       content: 'hello everyone',
     }));
 
@@ -35,7 +56,7 @@ describe('discord bot client', () => {
       customer.patch(`/api/guilds/${guildId}/attached-bot-command`, {
         key, config: {serviceId: '54321', roleIds: [23456, 34567]}
       });
-      await new Promise(resolve => socket.once('guild-bust', bustedGuildId => {
+      await new Promise(resolve => global.socket.once('guild-bust', bustedGuildId => {
         expect(bustedGuildId).toBe(guildId);
         resolve();
       }));
@@ -43,7 +64,6 @@ describe('discord bot client', () => {
 
     const noReply = jest.fn(() => {});
     global.client.emit('message', msg({
-      roleIds: [999999999],
       content: '!help',
       onReply: noReply
     }));
