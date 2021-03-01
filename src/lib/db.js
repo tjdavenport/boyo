@@ -99,7 +99,7 @@ module.exports = {
         },
         roleId: {
           type: DataTypes.STRING(255),
-          allowNull: true
+          allowNull: false
         },
       }),
     }).forEach(([key, model]) => cache.models[key] = model);

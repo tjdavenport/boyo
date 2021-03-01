@@ -28,14 +28,23 @@ describe('discord bot client', () => {
         expect(handled.mocked.replies[0]).toContain('create-faction');
       });
 
-
       const memberId = '999888777666';
       await global.client.emitAsync('message', msg({
-        memberId,
+        member: {id: memberId},
         content: '!create-faction',
       })).then(([handled]) => {
-          expect(handled.guild.channels.cache.array()[0].name).toBe('new-faction');
-          expect(handled.guild.channels.cache.array()[0].mocked.messages[0]).toContain(`<@${memberId}>`);
+        expect(handled.guild.roles.cache.array().map(({name}) => name)).toContain('new-faction');
+        expect(handled.guild.roles.cache.array().map(({id}) => id)).toContain(handled.member.roles.cache.keyArray()[0]);
+        expect(handled.guild.channels.cache.array()[0].name).toBe('new-faction');
+        expect(handled.guild.channels.cache.array()[0].mocked.messages[0]).toContain(`<@${memberId}>`);
+      });
+
+      await global.client.emitAsync('message', msg({
+        member: {id: memberId},
+        content: '!create-faction',
+      })).then(([handled]) => {
+        expect(handled.member.roles.cache.keyArray().length).toBe(1);
+        expect(handled.mocked.replies[0]).toContain('already in a faction');
       });
     });
   });
@@ -69,7 +78,7 @@ describe('discord bot client', () => {
     });
 
     await global.client.emitAsync('message', msg({
-      roleIds: [23456],
+      member: {roles: {_roles_: [{id: 23456}]}},
       content: '!nitrado-dayz-restart',
     })).then(([handled]) => {
       expect(handled.mocked.replies[0]).toContain('restarting');
@@ -81,7 +90,7 @@ describe('discord bot client', () => {
       });
 
     await global.client.emitAsync('message', msg({
-      roleIds: [23456],
+      member: {roles: {_roles_: [{id: 23456}]}},
       content: '!help',
       onReply: reply => {
         resolve();

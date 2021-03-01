@@ -70,13 +70,20 @@ const commandBodies = {
     }
   },
   'create-faction': async (config, attachedCommand, oAuth2Links, msg, models) => {
+    const guildFactionRoleIds = Object.values(cache.autoFactions[msg.guild.id]).map(({roleId}) => roleId);
+    if (guildFactionRoleIds.find(roleId => msg.member.roles.cache.keyArray().includes(roleId))) {
+      return msg.reply(`you're already in a faction!`);
+    }
+
     const everyone = msg.guild.roles.cache.find(role => role.name === '@everyone');
     const boyo = msg.guild.roles.cache.find(role => (role.name === 'boyo.gg') && role.managed);
+    const role = await msg.guild.roles.create({data: {name: 'new-faction', position: 1}});
+    await msg.member.roles.add(role.id);
     const channel = await msg.guild.channels.create('new-faction', {
       permissionOverwrites: [
         {type: 'role', id: everyone.id, deny: ['VIEW_CHANNEL']},
         {type: 'role', id: boyo.id, allow: ['VIEW_CHANNEL']},
-        {type: 'user', id: msg.member.id, allow: ['VIEW_CHANNEL']}
+        {type: 'role', id: role.id, allow: ['VIEW_CHANNEL']}
       ],
     });
     channel.send(`${msg.member.toString()}, it's time to setup your faction! What do you want to call it?`);
@@ -85,6 +92,7 @@ const commandBodies = {
       leaderId: msg.member.id,
       guildId: msg.guild.id,
       channelId: channel.id,
+      roleId: role.id,
     });
     cache.autoFactions[msg.guild.id][channel.id] = autoFaction.toJSON();
 
