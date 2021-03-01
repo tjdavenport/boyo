@@ -57,15 +57,17 @@ const systemCommands = Object
 
 const commandBodies = {
   'nitrado-dayz-restart': async (config, attachedCommand, oAuth2Links, msg, models) => {
-    axios.post(`${config.NITRADO_API_URI}/services/${attachedCommand.config.serviceId}/gameservers/restart`, null, {
-      headers: {
-        Authorization: `Bearer ${oAuth2Links['nitrado'].accessToken}`
-      }
-    }).then(res => msg.reply('the DayZ server is restarting...'))
-      .catch(error => {
-        console.error(error);
-        msg.reply('error encountered while restarting DayZ server');
+    try {
+      await axios.post(`${config.NITRADO_API_URI}/services/${attachedCommand.config.serviceId}/gameservers/restart`, null, {
+        headers: {
+          Authorization: `Bearer ${oAuth2Links['nitrado'].accessToken}`
+        }
       });
+      msg.reply('the DayZ server is restarting...');
+    } catch (error) {
+      console.error(error);
+      msg.reply('error encountered while restarting DayZ server');
+    }
   },
   'create-faction': async (config, attachedCommand, oAuth2Links, msg, models) => {
     const everyone = msg.guild.roles.cache.find(role => role.name === '@everyone');
@@ -110,8 +112,6 @@ module.exports = async (config, models, client, bus, log = () => {}) => {
       try {
         await ensureGuildCached(models, msg.member.guild.id);
         const availableCommands = memberCommands(msg.member);
-
-        console.log(availableCommands);
 
         if ((msg.content === '!help') && (availableCommands.length > 0)) {
           msg.reply(`henlo boyo! Here's some commands available to you;\n${availableCommands.map(command => {

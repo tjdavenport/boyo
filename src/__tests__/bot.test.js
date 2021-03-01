@@ -22,27 +22,21 @@ describe('discord bot client', () => {
         resolve();
       }));
 
-      new Promise(resolve => global.client.emit('message', msg({
+      await global.client.emitAsync('message', msg({
         content: '!help',
-        onReply: reply => {
-          expect(reply).toContain('create-faction');
-          resolve();
-        }
-      })));
+      })).then(([handled]) => {
+        expect(handled.mocked.replies[0]).toContain('create-faction');
+      });
+
 
       const memberId = '999888777666';
-      new Promise(resolve => global.client.emit('message', msg({
+      await global.client.emitAsync('message', msg({
         memberId,
         content: '!create-faction',
-        onChannelCreate: channel => {
-          expect(channel.name).toContain('new-faction');
-          resolve();
-        },
-        onMsg: ({channel, msg: createMsg}) => {
-          expect(channel.name).toContain('new-faction');
-          expect(createMsg).toContain(`<@${memberId}>`);
-        },
-      })));
+      })).then(([handled]) => {
+          expect(handled.guild.channels.cache.array()[0].name).toBe('new-faction');
+          expect(handled.guild.channels.cache.array()[0].mocked.messages[0]).toContain(`<@${memberId}>`);
+      });
     });
   });
 
@@ -68,22 +62,17 @@ describe('discord bot client', () => {
       }));
     }
 
-    const noReply = jest.fn(() => {});
-    global.client.emit('message', msg({
+    await global.client.emitAsync('message', msg({
       content: '!help',
-      onReply: noReply
-    }));
-    expect(noReply).not.toHaveBeenCalled();
+    })).then(([handled]) => {
+      expect(handled.mocked.replies.length).toBe(0);
+    });
 
-    await new Promise(resolve => {
-      global.client.emit('message', msg({
-        roleIds: [23456],
-        content: '!nitrado-dayz-restart',
-        onReply: reply => {
-          expect(reply).toContain('restarting');
-          resolve();
-        }
-      }));
+    await global.client.emitAsync('message', msg({
+      roleIds: [23456],
+      content: '!nitrado-dayz-restart',
+    })).then(([handled]) => {
+      expect(handled.mocked.replies[0]).toContain('restarting');
     });
 
     await customer.get(`/api/guilds/${guildId}/nitrado/services/54321/logs`)
@@ -91,15 +80,16 @@ describe('discord bot client', () => {
         expect(data.data.logs.map(({message}) => message)).toContain('Server restarted.');
       });
 
-    await new Promise(resolve => global.client.emit('message', msg({
+    await global.client.emitAsync('message', msg({
       roleIds: [23456],
       content: '!help',
       onReply: reply => {
-        for (const key of Object.keys(constants.categories['nitrado-dayz'].botCommands)) {
-          expect(reply).toContain(key);
-        }
         resolve();
       }
-    })));
+    })).then(([handled]) => {
+      for (const key of Object.keys(constants.categories['nitrado-dayz'].botCommands)) {
+        expect(handled.mocked.replies[0]).toContain(key);
+      }
+    });
   });
 });

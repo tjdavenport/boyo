@@ -14,14 +14,16 @@ module.exports = guildId => ({memberId = '91836957238357', roleIds = [Symbol()],
       },
     ],
     cache: {
-      find: findFunc => roles._roles_.find(findFunc)
+      find: findFunc => roles._roles_.find(findFunc),
+      array: () => roles._roles_
     }
   };
 
   const channels = {
     _channels_: [],
     cache: {
-      find: findFunc => channels._channels_.find(findFunc)
+      find: findFunc => channels._channels_.find(findFunc),
+      array: () => channels._channels_
     },
     create: (name, options = {}) => {
       return new Promise(resolve => {
