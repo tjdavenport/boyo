@@ -53,6 +53,22 @@ describe('discord bot client', () => {
       await global.client.emitAsync('message', msg({
         channel: factionChannel,
         member: {id: memberId},
+        content: 'wrong name whoops',
+      })).then(([handled]) => {
+        expect(handled.mocked.replies[0]).toContain('"wrong name whoops"? Respond "yes"');
+      });
+
+      await global.client.emitAsync('message', msg({
+        channel: factionChannel,
+        member: {id: memberId},
+        content: 'no',
+      })).then(([handled]) => {
+        expect(handled.mocked.replies[0]).toContain('what would you like to call your faction?');
+      });
+
+      await global.client.emitAsync('message', msg({
+        channel: factionChannel,
+        member: {id: memberId},
         content: 'foobar baz',
       })).then(([handled]) => {
         expect(handled.mocked.replies[0]).toContain('"foobar baz"? Respond "yes"');
@@ -66,7 +82,59 @@ describe('discord bot client', () => {
         };
       })).then(([handled]) => {
         expect(handled.mocked.replies[0]).toContain('what color would you like');
+        expect(handled.mocked.replies[0]).toContain('Available colors:');
         expect(handled.member.roles.cache.find(({name}) => name === 'foobar baz')).toBeTruthy();
+      });
+
+      await global.client.emitAsync('message', msg(guild => {
+        return {
+          channel: guild.channels.cache.get(factionChannel.id),
+          member: {id: memberId},
+          content: 'shit',
+        };
+      })).then(([handled]) => {
+        expect(handled.mocked.replies[0]).toContain('Available colors:');
+      });
+
+      await global.client.emitAsync('message', msg(guild => {
+        return {
+          channel: guild.channels.cache.get(factionChannel.id),
+          member: {id: memberId},
+          content: 'green',
+        };
+      })).then(([handled]) => {
+        expect(handled.mocked.replies[0]).toContain('are you sure you want your faction color to be "green"?');
+      });
+
+      await global.client.emitAsync('message', msg(guild => {
+        return {
+          channel: guild.channels.cache.get(factionChannel.id),
+          member: {id: memberId},
+          content: 'no',
+        };
+      })).then(([handled]) => {
+        expect(handled.mocked.replies[0]).toContain('Available colors:');
+      });
+
+      await global.client.emitAsync('message', msg(guild => {
+        return {
+          channel: guild.channels.cache.get(factionChannel.id),
+          member: {id: memberId},
+          content: 'blue',
+        };
+      })).then(([handled]) => {
+        expect(handled.mocked.replies[0]).toContain('are you sure you want your faction color to be "blue"?');
+      });
+
+      await global.client.emitAsync('message', msg(guild => {
+        return {
+          channel: guild.channels.cache.get(factionChannel.id),
+          member: {id: memberId},
+          content: 'yes',
+        };
+      })).then(([handled]) => {
+        expect(handled.member.roles.cache.array()[0].color).toBe('BLUE');
+        expect(handled.mocked.replies[0]).toContain('your faction has been setup!');
       });
     });
   });

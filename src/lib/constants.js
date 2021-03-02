@@ -9,6 +9,8 @@ const dPerms = {
   viewChannel: 0x00000400,
 };
 
+exports.factionColors = ['BLACK', 'BLUE', 'GREEN', 'ORANGE', 'PINK', 'RED', 'YELLOW', 'WHITE'];
+
 exports.categories = {
   'auto-factions': {
     name: 'Auto Factions',

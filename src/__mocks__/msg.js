@@ -26,7 +26,13 @@ module.exports = guildId => mockOptions => {
           const id = String(lastId++);
           const role = {
             id,
-            ...options.data
+            ...options.data,
+            edit: newValues => {
+              return new Promise(resolve => {
+                Object.entries(newValues).forEach(([key, value]) => role[key] = value);
+                resolve(role);
+              });
+            },
           };
           guilds[guildId].roles._roles_.push(role);
           resolve(role);
@@ -84,6 +90,12 @@ module.exports = guildId => mockOptions => {
             role.name = newName;
             return resolve(channel);
           }),
+          edit: newValues => {
+            return new Promise(resolve => {
+              Object.entries(newValues).forEach(([key, value]) => role[key] = value);
+              resolve(role);
+            });
+          },
         };
         guilds[guildId].roles._roles_.push(role);
         members[memberId].roles._roles_.push(role);

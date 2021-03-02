@@ -79,8 +79,8 @@ const commandBodies = {
     const boyo = msg.guild.roles.cache.find(role => (role.name === 'boyo.gg') && role.managed);
     const role = await msg.guild.roles.create({data: {
       name: 'new-faction', 
-      position: 999,
-      color: 'WHITE',
+      hoist: true,
+      color: 'GREY',
     }});
     await msg.member.roles.add(role.id);
     const channel = await msg.guild.channels.create('new-faction', {
@@ -138,24 +138,53 @@ module.exports = async (config, models, client, bus, log = () => {}) => {
           const autoFaction = cache.autoFactions[msg.guild.id][msg.channel.id];
           const isLeaderMsg = autoFaction.leaderId === msg.member.id;
 
+          // logic for faction color
+          if (isLeaderMsg && autoFaction.awaitingColor) {
+            if (constants.factionColors.includes(msg.content.toUpperCase())) {
+              delete autoFaction.awaitingColor;
+              autoFaction.pendingColor = msg.content.toUpperCase();
+              msg.reply(`are you sure you want your faction color to be "${msg.content}"? Respond "yes" to confirm or "no" to use a different color.`);
+              return msg;
+            } else {
+              msg.reply(`Available colors: ${constants.factionColors.join(', ')}`);
+              return msg;
+            }
+            return msg;
+          }
+          if (isLeaderMsg && !autoFaction.awaitingColor && autoFaction.pendingColor) {
+            if (msg.content.toLowerCase() === 'yes') {
+              await msg.member.roles.cache.get(autoFaction.roleId).edit({color: autoFaction.pendingColor});
+              delete autoFaction.pendingColor;
+              msg.reply(`your faction has been setup!`);
+              return msg;
+            }
+            if (msg.content.toLowerCase() === 'no') {
+              delete autoFaction.pendingColor;
+              msg.reply(`Available colors: ${constants.factionColors.join(', ')}`);
+              autoFaction.awaitingColor = true;
+              return msg;
+            }
+          }
+
+
+          // logic for faction name
           if (isLeaderMsg && (msg.channel.name === 'new-faction') && !autoFaction.pendingName) {
             autoFaction.pendingName = msg.content;
             msg.reply(`are you sure you want to name your faction "${msg.content}"? Respond "yes" to confirm or "no" to use a different name.`);
             return msg;
           }
-
           if (isLeaderMsg && (msg.channel.name === 'new-faction') && autoFaction.pendingName) {
-            if (msg.content === 'yes') {
+            if (msg.content.toLowerCase() === 'yes') {
               await msg.channel.setName(autoFaction.pendingName);
               await msg.member.roles.cache.get(autoFaction.roleId).setName(autoFaction.pendingName);
-              msg.reply('what color would you like your faction to be?');
               delete autoFaction.pendingName;
+              autoFaction.awaitingColor = true;
+              msg.reply(`what color would you like your faction to be?\nAvailable colors: ${constants.factionColors.join(', ')}`);
             }
 
-            if (msg.content === 'no') {
-              await msg.channel.setName(autoFaction.pendingName);
-              msg.reply('what would you like to call your faction?');
+            if (msg.content.toLowerCase() === 'no') {
               delete autoFaction.pendingName;
+              msg.reply('what would you like to call your faction?');
             }
             return msg;
           }
