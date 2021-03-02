@@ -103,9 +103,9 @@ const commandBodies = {
     setTimeout(() => {
       channel.fetch(true).then(latestChannel => {
         if (channel.name === 'new-faction') {
-          delete cache.autoFactions[guildId][channel.id];
           channel.delete().catch(error => console.error(error));
           autoFaction.detroy().catch(error => console.error(error));
+          delete cache.autoFactions[msg.guild.id][channel.id];
         }
       });
     }, 300000);
