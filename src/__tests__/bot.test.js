@@ -29,10 +29,13 @@ describe('discord bot client', () => {
       });
 
       const memberId = '999888777666';
+      const factionChannel = {};
       await global.client.emitAsync('message', msg({
         member: {id: memberId},
         content: '!create-faction',
       })).then(([handled]) => {
+        factionChannel.id = handled.guild.channels.cache.array()[0].id;
+        factionChannel.name = handled.guild.channels.cache.array()[0].name;
         expect(handled.guild.roles.cache.array().map(({name}) => name)).toContain('new-faction');
         expect(handled.guild.roles.cache.array().map(({id}) => id)).toContain(handled.member.roles.cache.keyArray()[0]);
         expect(handled.guild.channels.cache.array()[0].name).toBe('new-faction');
@@ -45,6 +48,25 @@ describe('discord bot client', () => {
       })).then(([handled]) => {
         expect(handled.member.roles.cache.keyArray().length).toBe(1);
         expect(handled.mocked.replies[0]).toContain('already in a faction');
+      });
+
+      await global.client.emitAsync('message', msg({
+        channel: factionChannel,
+        member: {id: memberId},
+        content: 'foobar baz',
+      })).then(([handled]) => {
+        expect(handled.mocked.replies[0]).toContain('"foobar baz"? Respond "yes"');
+      });
+
+      await global.client.emitAsync('message', msg(guild => {
+        return {
+          channel: guild.channels.cache.get(factionChannel.id),
+          member: {id: memberId},
+          content: 'yes',
+        };
+      })).then(([handled]) => {
+        expect(handled.mocked.replies[0]).toContain('what color would you like');
+        expect(handled.member.roles.cache.find(({name}) => name === 'foobar baz')).toBeTruthy();
       });
     });
   });

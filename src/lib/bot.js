@@ -77,7 +77,11 @@ const commandBodies = {
 
     const everyone = msg.guild.roles.cache.find(role => role.name === '@everyone');
     const boyo = msg.guild.roles.cache.find(role => (role.name === 'boyo.gg') && role.managed);
-    const role = await msg.guild.roles.create({data: {name: 'new-faction', position: 1}});
+    const role = await msg.guild.roles.create({data: {
+      name: 'new-faction', 
+      position: 999,
+      color: 'WHITE',
+    }});
     await msg.member.roles.add(role.id);
     const channel = await msg.guild.channels.create('new-faction', {
       permissionOverwrites: [
@@ -121,6 +125,7 @@ module.exports = async (config, models, client, bus, log = () => {}) => {
         await ensureGuildCached(models, msg.member.guild.id);
         const availableCommands = memberCommands(msg.member);
 
+        // handle help command
         if ((msg.content === '!help') && (availableCommands.length > 0)) {
           msg.reply(`henlo boyo! Here's some commands available to you;\n${availableCommands.map(command => {
             return `\`!${command.key}\` - ${systemCommands[command.key].description}`;
@@ -128,15 +133,46 @@ module.exports = async (config, models, client, bus, log = () => {}) => {
           return msg;
         }
 
-        for (const command of availableCommands) {
-          if (msg.content.startsWith('!' + command.key)) {
-            if (systemCommands[command.key].categoryKey === 'auto-factions') {
-              await ensureAutoFactionsCached(models, msg.member.guild.id);
+        // handle faction setup for leaders
+        if (cache.autoFactions[msg.guild.id]?.[msg.channel.id]) {
+          const autoFaction = cache.autoFactions[msg.guild.id][msg.channel.id];
+          const isLeaderMsg = autoFaction.leaderId === msg.member.id;
+
+          if (isLeaderMsg && (msg.channel.name === 'new-faction') && !autoFaction.pendingName) {
+            autoFaction.pendingName = msg.content;
+            msg.reply(`are you sure you want to name your faction "${msg.content}"? Respond "yes" to confirm or "no" to use a different name.`);
+            return msg;
+          }
+
+          if (isLeaderMsg && (msg.channel.name === 'new-faction') && autoFaction.pendingName) {
+            if (msg.content === 'yes') {
+              await msg.channel.setName(autoFaction.pendingName);
+              await msg.member.roles.cache.get(autoFaction.roleId).setName(autoFaction.pendingName);
+              msg.reply('what color would you like your faction to be?');
+              delete autoFaction.pendingName;
             }
 
-            log(`running command ${command.key} for guild ${msg.member.guild.id}`);
-            await commandBodies[command.key]?.(config, command, cache.links[msg.member.guild.id], msg, models);
-            break;
+            if (msg.content === 'no') {
+              await msg.channel.setName(autoFaction.pendingName);
+              msg.reply('what would you like to call your faction?');
+              delete autoFaction.pendingName;
+            }
+            return msg;
+          }
+        }
+
+        // handle commands
+        if (msg.content.startsWith('!')) {
+          for (const command of availableCommands) {
+            if (msg.content.startsWith('!' + command.key)) {
+              if (systemCommands[command.key].categoryKey === 'auto-factions') {
+                await ensureAutoFactionsCached(models, msg.member.guild.id);
+              }
+
+              log(`running command ${command.key} for guild ${msg.member.guild.id}`);
+              await commandBodies[command.key]?.(config, command, cache.links[msg.member.guild.id], msg, models);
+              break;
+            }
           }
         }
 

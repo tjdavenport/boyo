@@ -3,7 +3,9 @@ let lastId = 1;
 const guilds = {};
 const members = {};
 
-module.exports = guildId => ({member = {}, content = ''}) => {
+module.exports = guildId => mockOptions => {
+  const {member = {}, channel, content = ''} = (typeof mockOptions === 'function') ? mockOptions(guilds[guildId]) : mockOptions;
+
   !guilds[guildId] && (guilds[guildId] = {
     id: guildId,
     replies: [],
@@ -32,14 +34,16 @@ module.exports = guildId => ({member = {}, content = ''}) => {
       },
       cache: {
         find: findFunc => guilds[guildId].roles._roles_.find(findFunc),
-        array: () => guilds[guildId].roles._roles_
+        array: () => guilds[guildId].roles._roles_,
+        get: needle => guilds[guildId].roles._roles_.find(({id}) => id === needle)
       }
     },
     channels: {
       _channels_: [],
       cache: {
         find: findFunc => channels._channels_.find(findFunc),
-        array: () => guilds[guildId].channels._channels_
+        array: () => guilds[guildId].channels._channels_,
+        get: needle => guilds[guildId].channels._channels_.find(({id}) => id === needle)
       },
       create: (name, options = {}) => {
         return new Promise(resolve => {
@@ -51,6 +55,10 @@ module.exports = guildId => ({member = {}, content = ''}) => {
               messages,
             },
             send: msg => messages.push(msg),
+            setName: newName => new Promise(resolve => {
+              channel.name = newName;
+              return resolve(channel);
+            }),
             id,
             name,
             ...options,
@@ -70,12 +78,22 @@ module.exports = guildId => ({member = {}, content = ''}) => {
     roles: {
       _roles_: [...((member.roles && member.roles._roles_) ? member.roles._roles_ : [] )],
       add: roleId => {
-        members[memberId].roles._roles_.push({id: roleId});
-        return Promise.resolve({id: roleId});
+        const role = {
+          id: roleId,
+          setName: newName => new Promise(resolve => {
+            role.name = newName;
+            return resolve(channel);
+          }),
+        };
+        guilds[guildId].roles._roles_.push(role);
+        members[memberId].roles._roles_.push(role);
+        return Promise.resolve(role);
       },
       cache: {
+        find: findFunc => members[memberId].roles._roles_.find(findFunc),
         keyArray: () => members[memberId].roles._roles_.map(({id}) => id),
         array: () => members[memberId].roles._roles_,
+        get: needle => members[memberId].roles._roles_.find(({id}) => id === needle)
       }
     },
     toString: () => `<@${members[memberId].id}>`,
@@ -83,11 +101,13 @@ module.exports = guildId => ({member = {}, content = ''}) => {
   });
 
   const replies = [];
+
   return {
     mocked: {
       replies
     },
     reply: msg => replies.push(msg),
+    channel: channel || {id: String(lastId++)},
     content,
     guild: guilds[guildId],
     member: members[memberId],
