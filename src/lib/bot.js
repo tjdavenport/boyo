@@ -69,7 +69,16 @@ const commandBodies = {
       msg.reply('error encountered while restarting DayZ server');
     }
   },
-  'create-faction': async (config, attachedCommand, oAuth2Links, msg, models) => {
+  'faction-invite': async (config, attachedCommand, oAuth2Links, msg, models) => {
+    if (!Object.values(cache.autoFactions[msg.guild.id]).map(({leaderId}) => leaderId).includes(msg.member.id)) {
+      return msg.reply('you\'re not a faction leader!');
+    }
+    await msg.react('U+1F44D');
+    await msg.react('U+1F44E');
+    await msg.channel.send('Thumbs up to accept invite, thumbs downt to decline.');
+    return msg;
+  },
+  'faction-create': async (config, attachedCommand, oAuth2Links, msg, models) => {
     const guildFactionRoleIds = Object.values(cache.autoFactions[msg.guild.id]).map(({roleId}) => roleId);
     if (guildFactionRoleIds.find(roleId => msg.member.roles.cache.keyArray().includes(roleId))) {
       return msg.reply(`you're already in a faction!`);
@@ -115,11 +124,18 @@ const commandBodies = {
 module.exports = async (config, models, client, bus, log = () => {}) => {
   try {
     bus.on('guild-bust', guildId => {
-      ensureGuildCached(models, guildId, true);
-      log(`guild ${guildId} cache busted`);
+      ensureGuildCached(models, guildId, true).then(() => {
+        log(`guild ${guildId} cache busted`);
+        client.emit('guild-busted', guildId);
+      });
     });
 
     client.on('ready', () => log('boyo bot ready'));
+
+    client.on('messageReactionAdd', async (reaction, user) => {
+
+    });
+
     client.on('message', async msg => {
       try {
         await ensureGuildCached(models, msg.member.guild.id);

@@ -55,7 +55,10 @@ configure(process.env);
   program
     .command('bot:login')
     .action(async (socketPort) => {
-      const client = new Discord.Client();
+      const client = new Discord.Client({
+        partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
+      });
+
       const boyo = await bot(
         process.env,
         models(), 

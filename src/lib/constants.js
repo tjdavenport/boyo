@@ -15,18 +15,18 @@ exports.categories = {
   'auto-factions': {
     name: 'Auto Factions',
     botCommands: {
-      'create-faction': {
+      'faction-create': {
         description: 'Create a private faction channel & custom role',
         discordPerms: [dPerms.readMessageHistory, dPerms.sendMessages, dPerms.addReactions, dPerms.manageRoles, dPerms.manageChannels, dPerms.viewChannel],
         oAuth2Links: [],
       },
       'faction-invite': {
-        description: 'Invite someone to your faction.',
+        description: 'Invite someone to your faction by pinging them. E.g !faction-invite @boyo.gg',
         discordPerms: [dPerms.readMessageHistory, dPerms.sendMessages, dPerms.addReactions, dPerms.manageRoles, dPerms.manageChannels, dPerms.viewChannel],
         oAuth2Links: [],
       },
       'faction-kick': {
-        description: 'Kick someone from your faction.',
+        description: 'Kick someone from your faction by pinging them. E.g !faction-kick @boyo.gg',
         discordPerms: [dPerms.readMessageHistory, dPerms.sendMessages, dPerms.addReactions, dPerms.manageRoles, dPerms.manageChannels, dPerms.viewChannel],
         oAuth2Links: [],
       },

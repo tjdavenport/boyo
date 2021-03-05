@@ -49,7 +49,7 @@ module.exports = guildId => mockOptions => {
       cache: {
         find: findFunc => channels._channels_.find(findFunc),
         array: () => guilds[guildId].channels._channels_,
-        get: needle => guilds[guildId].channels._channels_.find(({id}) => id === needle)
+        get: needle => guilds[guildId].channels._channels_.find(({id}) => id === needle),
       },
       create: (name, options = {}) => {
         return new Promise(resolve => {
@@ -65,6 +65,7 @@ module.exports = guildId => mockOptions => {
               channel.name = newName;
               return resolve(channel);
             }),
+            fetch: () => Promise.resolve(channel),
             id,
             name,
             ...options,
@@ -113,13 +114,21 @@ module.exports = guildId => mockOptions => {
   });
 
   const replies = [];
+  const messages = [];
+  const reactions = [];
 
   return {
     mocked: {
-      replies
+      replies,
+      messages,
+      reactions,
     },
+    react: emoji => reactions.push(emoji),
     reply: msg => replies.push(msg),
-    channel: channel || {id: String(lastId++)},
+    channel: channel || {
+      id: String(lastId++),
+      send: msg => messages.push(msg)
+    },
     content,
     guild: guilds[guildId],
     member: members[memberId],

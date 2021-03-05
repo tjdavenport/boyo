@@ -17,7 +17,7 @@ describe('discord bot client', () => {
       customer.patch(`/api/guilds/${guildId}/attached-bot-command`, {
         key: 'create-faction', config: {}
       });
-      await new Promise(resolve => global.socket.once('guild-bust', bustedGuildId => {
+      await new Promise(resolve => global.client.once('guild-busted', bustedGuildId => {
         expect(bustedGuildId).toBe(guildId);
         resolve();
       }));
@@ -137,6 +137,40 @@ describe('discord bot client', () => {
         expect(handled.mocked.replies[0]).toContain('your faction has been setup!');
       });
     });
+    it.only('supports inviting other members to a faction', async () => {
+      const customer = httpCustomer();
+      const guildId = '999888777';
+      const msg = mockMsg(guildId);
+
+      await customer.get('/login');
+
+      for (const key of ['faction-create', 'faction-invite']) {
+        customer.patch(`/api/guilds/${guildId}/attached-bot-command`, {
+          key, config: {}
+        });
+        await new Promise(resolve => global.client.once('guild-busted', bustedGuildId => {
+          expect(bustedGuildId).toBe(guildId);
+          resolve();
+        }));
+      }
+
+      await global.client.emitAsync('message', msg({content: '!faction-invite'})).then(([handled]) => {
+        expect(handled.mocked.replies[0]).toContain('you\'re not a faction leader!');
+      });
+
+      const leader = {id: '9199612298'};
+      await global.client.emitAsync('message', msg({content: '!faction-create', member: leader}));
+
+      const factionMsg = content => global.client.emitAsync('message', msg(guild => {
+        return {content, member: leader, channel: guild.channels.cache.array()[0]};
+      }));
+      await factionMsg('Boyos in the Hood');
+      await factionMsg('yes');
+      await factionMsg('black');
+      await factionMsg('yes').then(([handled]) => {
+        console.log(handled.guild.channels._channels_);
+      });
+    });
   });
 
   it('supports console dayz server management', async () => {
@@ -155,7 +189,7 @@ describe('discord bot client', () => {
       customer.patch(`/api/guilds/${guildId}/attached-bot-command`, {
         key, config: {serviceId: '54321', roleIds: [23456, 34567]}
       });
-      await new Promise(resolve => global.socket.once('guild-bust', bustedGuildId => {
+      await new Promise(resolve => global.client.once('guild-busted', bustedGuildId => {
         expect(bustedGuildId).toBe(guildId);
         resolve();
       }));
