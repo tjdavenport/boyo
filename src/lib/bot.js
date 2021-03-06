@@ -159,16 +159,16 @@ module.exports = async (config, models, client, bus, log = () => {}) => {
 
           const autoFactionRoleIds = autoFactions.map(({roleId}) => roleId);
 
-          await user.presence.member.fetch();
+          const member = await reaction.message.guild.members.fetch(user.id);
           const eligible = reaction.message.mentions.has(user) && 
-            autoFactions.every(({roleId}) => !user.presence.member.roles.cache.has(roleId));
+            autoFactions.every(({roleId}) => !member.roles.cache.has(roleId));
 
           if (eligible) {
-            log(`adding member ${user.presence.member.id} to auto faction ${autoFaction.id}`);
-            return await user.presence.member.roles.add(autoFaction.roleId);
+            log(`adding member ${member.id} to auto faction ${autoFaction.id}`);
+            return await member.roles.add(autoFaction.roleId);
           }
           
-          log(`member ${user.presence.member.id} was not eligible for auto faction ${autoFaction.id}`);
+          log(`member ${member.id} was not eligible for auto faction ${autoFaction.id}`);
         }
       } catch (error) {
         return console.error(error);
