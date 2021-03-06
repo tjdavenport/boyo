@@ -40,6 +40,18 @@ configure(process.env);
     });
 
   program
+    .command('db:seed:auto-factions <guildId>')
+    .action(async guildId => {
+      for (const key of ['faction-create', 'faction-invite']) {
+        await models().AttachedBotCommand.create({
+          key, guildId
+        });
+      }
+      await sql().close();
+      process.exit();
+    });
+
+  program
     .command('serve <port> <socketPort>')
     .action(async (port, socketPort) => {
       const boyo = express();
@@ -49,7 +61,8 @@ configure(process.env);
       app(boyo);
       await register(boyo);
       await boyo.start(port);
-      log.http(`listening on ${port}`)
+      log.http(`http server listening on ${port}`);
+      log.http(`socket server listening on ${socketPort}`);
     });
 
   program
@@ -57,6 +70,7 @@ configure(process.env);
     .action(async (socketPort) => {
       const client = new Discord.Client({
         partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
+        ws: {intents: Discord.Intents.ALL},
       });
 
       const boyo = await bot(

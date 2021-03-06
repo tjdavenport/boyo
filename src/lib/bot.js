@@ -73,9 +73,8 @@ const commandBodies = {
     if (!Object.values(cache.autoFactions[msg.guild.id]).map(({leaderId}) => leaderId).includes(msg.member.id)) {
       return msg.reply('you\'re not a faction leader!');
     }
-    await msg.react('U+1F44D');
-    await msg.react('U+1F44E');
-    await msg.channel.send('Thumbs up to accept invite, thumbs downt to decline.');
+    await msg.react('👍');
+    await msg.channel.send('Thumbs up to accept faction invites.');
     return msg;
   },
   'faction-create': async (config, attachedCommand, oAuth2Links, msg, models) => {
@@ -90,9 +89,14 @@ const commandBodies = {
       name: 'new-faction', 
       hoist: true,
       color: 'GREY',
+      position: 1,
     }});
     await msg.member.roles.add(role.id);
+
+    const parent = msg.guild.channels.cache.find(channel => ((channel.type === 'category') && (channel.name.toLowerCase() === 'factions'))) || {}
+
     const channel = await msg.guild.channels.create('new-faction', {
+      parent: parent.id,
       permissionOverwrites: [
         {type: 'role', id: everyone.id, deny: ['VIEW_CHANNEL']},
         {type: 'role', id: boyo.id, allow: ['VIEW_CHANNEL']},
@@ -132,8 +136,43 @@ module.exports = async (config, models, client, bus, log = () => {}) => {
 
     client.on('ready', () => log('boyo bot ready'));
 
+    console.log("foobar");
     client.on('messageReactionAdd', async (reaction, user) => {
+      try {
+        if (user.bot) return;
+        if (reaction.partial) {
+          await reaction.fetch();
+        }
 
+        if (reaction.message.content.startsWith('!faction-invite')) {
+          await ensureAutoFactionsCached(models, reaction.message.guild.id);
+
+          const guildId = reaction.message.guild.id;
+          const autoFactions = Object.values(cache.autoFactions[guildId]);
+          const autoFaction = autoFactions.find(({leaderId}) => leaderId === reaction.message.author.id);
+
+          log(`handling faction invite for guild ${guildId} auto faction ${autoFaction.id}`);
+
+          if (!autoFaction) {
+            return log(`auto faction no longer exists`);
+          };
+
+          const autoFactionRoleIds = autoFactions.map(({roleId}) => roleId);
+
+          await user.presence.member.fetch();
+          const eligible = reaction.message.mentions.has(user) && 
+            autoFactions.every(({roleId}) => !user.presence.member.roles.cache.has(roleId));
+
+          if (eligible) {
+            log(`adding member ${user.presence.member.id} to auto faction ${autoFaction.id}`);
+            return await user.presence.member.roles.add(autoFaction.roleId);
+          }
+          
+          log(`member ${user.presence.member.id} was not eligible for auto faction ${autoFaction.id}`);
+        }
+      } catch (error) {
+        return console.error(error);
+      }
     });
 
     client.on('message', async msg => {
