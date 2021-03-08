@@ -42,7 +42,7 @@ configure(process.env);
   program
     .command('db:seed:auto-factions <guildId>')
     .action(async guildId => {
-      for (const key of ['faction-create', 'faction-invite']) {
+      for (const key of ['faction-create', 'faction-invite', 'faction-quit', 'faction-kick']) {
         await models().AttachedBotCommand.create({
           key, guildId
         });

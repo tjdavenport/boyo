@@ -77,6 +77,29 @@ const commandBodies = {
     await msg.channel.send('Thumbs up to accept faction invites.');
     return msg;
   },
+  'faction-kick': async (config, attachedCommand, oAuth2Links, msg, models) => {
+    if (!Object.values(cache.autoFactions[msg.guild.id]).map(({leaderId}) => leaderId).includes(msg.member.id)) {
+      return msg.reply('you\'re not a faction leader!');
+    }
+
+    const autoFaction = Object.values(cache.autoFactions[msg.guild.id]).find(({leaderId}) => leaderId === msg.author.id);
+    await msg.guild.roles.fetch();
+
+    const autoFactionRole = msg.guild.roles.cache.get(autoFaction.roleId);
+
+    for (const member of autoFactionRole.members.array()) {
+      if ((msg.mentions.has(member)) && (member.id === autoFaction.leaderId)) {
+        msg.reply('you can\'t kick yourself. You\'re the leader! Use `!faction-disband`');
+        continue;
+      }
+
+      if (msg.mentions.has(member)) {
+        await member.roles.remove(autoFactionRole);
+      }
+    }
+
+    return;
+  },
   'faction-create': async (config, attachedCommand, oAuth2Links, msg, models) => {
     const guildFactionRoleIds = Object.values(cache.autoFactions[msg.guild.id]).map(({roleId}) => roleId);
     if (guildFactionRoleIds.find(roleId => msg.member.roles.cache.keyArray().includes(roleId))) {
@@ -136,7 +159,6 @@ module.exports = async (config, models, client, bus, log = () => {}) => {
 
     client.on('ready', () => log('boyo bot ready'));
 
-    console.log("foobar");
     client.on('messageReactionAdd', async (reaction, user) => {
       try {
         if (user.bot) return;
@@ -165,6 +187,7 @@ module.exports = async (config, models, client, bus, log = () => {}) => {
 
           if (eligible) {
             log(`adding member ${member.id} to auto faction ${autoFaction.id}`);
+            reaction.message.guild.channels.resolve(autoFaction.channelId).send(`${member.toString()} accepted an invite: ${reaction.message.url}`);
             return await member.roles.add(autoFaction.roleId);
           }
           

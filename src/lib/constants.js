@@ -30,6 +30,11 @@ exports.categories = {
         discordPerms: [dPerms.readMessageHistory, dPerms.sendMessages, dPerms.addReactions, dPerms.manageRoles, dPerms.manageChannels, dPerms.viewChannel],
         oAuth2Links: [],
       },
+      'faction-quit': {
+        description: 'Leave your current faction.',
+        discordPerms: [dPerms.readMessageHistory, dPerms.sendMessages, dPerms.addReactions, dPerms.manageRoles, dPerms.manageChannels, dPerms.viewChannel],
+        oAuth2Links: [],
+      },
       'faction-disband': {
         description: 'Kick everyone from your faction and disband it.',
         discordPerms: [dPerms.readMessageHistory, dPerms.sendMessages, dPerms.addReactions, dPerms.manageRoles, dPerms.manageChannels, dPerms.viewChannel],
