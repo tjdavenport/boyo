@@ -34,6 +34,15 @@ const token = {
   'scope': 'identify email guilds', 
   'token_type': 'Bearer'
 };
+
+app.post('/api/guilds/:guildId/channels', (req, res, next) => {
+  console.log(req.body);
+  console.log(req.headers);
+  console.log(req.query);
+  console.log(req.params);
+  return res.json({foo: bar});
+});
+
 app.get('/api/oauth2/authorize', (req, res, next) => {
   return res.redirect(`${req.query.redirect_uri}?${new url.URLSearchParams({
     code: 'd8vtn5s1zlouyyflt94ggglzu2635g',
@@ -62,8 +71,9 @@ app.get('/api/users/@me', (req, res, next) => {
   });
 });
 
+
 app.start = port => new Promise(resolve => {
-  const server = app.listen(port, () => resolve(server));
+  discord.listen(port, () => resolve(discord));
 });
 
 module.exports = app;

@@ -15,7 +15,7 @@ describe('discord bot client', () => {
       await customer.get('/login');
 
       customer.patch(`/api/guilds/${guildId}/attached-bot-command`, {
-        key: 'create-faction', config: {}
+        key: 'faction-create', config: {}
       });
       await new Promise(resolve => global.client.once('guild-busted', bustedGuildId => {
         expect(bustedGuildId).toBe(guildId);
@@ -25,14 +25,14 @@ describe('discord bot client', () => {
       await global.client.emitAsync('message', msg({
         content: '!help',
       })).then(([handled]) => {
-        expect(handled.mocked.replies[0]).toContain('create-faction');
+        expect(handled.mocked.replies[0]).toContain('faction-create');
       });
 
       const memberId = '999888777666';
       const factionChannel = {};
       await global.client.emitAsync('message', msg({
         member: {id: memberId},
-        content: '!create-faction',
+        content: '!faction-create',
       })).then(([handled]) => {
         factionChannel.id = handled.guild.channels.cache.array()[0].id;
         factionChannel.name = handled.guild.channels.cache.array()[0].name;
@@ -44,7 +44,7 @@ describe('discord bot client', () => {
 
       await global.client.emitAsync('message', msg({
         member: {id: memberId},
-        content: '!create-faction',
+        content: '!faction-create',
       })).then(([handled]) => {
         expect(handled.member.roles.cache.keyArray().length).toBe(1);
         expect(handled.mocked.replies[0]).toContain('already in a faction');
@@ -137,7 +137,7 @@ describe('discord bot client', () => {
         expect(handled.mocked.replies[0]).toContain('your faction has been setup!');
       });
     });
-    it.only('supports inviting other members to a faction', async () => {
+    it('supports inviting other members to a faction', async () => {
       const customer = httpCustomer();
       const guildId = '999888777';
       const msg = mockMsg(guildId);
@@ -168,7 +168,7 @@ describe('discord bot client', () => {
       await factionMsg('yes');
       await factionMsg('black');
       await factionMsg('yes').then(([handled]) => {
-        console.log(handled.guild.channels._channels_);
+        expect(handled.guild.channels.cache.array()[0].name).toBe('Boyos in the Hood');
       });
     });
   });

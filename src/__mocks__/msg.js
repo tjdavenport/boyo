@@ -47,7 +47,7 @@ module.exports = guildId => mockOptions => {
     channels: {
       _channels_: [],
       cache: {
-        find: findFunc => channels._channels_.find(findFunc),
+        find: findFunc => guilds[guildId].channels._channels_.find(findFunc),
         array: () => guilds[guildId].channels._channels_,
         get: needle => guilds[guildId].channels._channels_.find(({id}) => id === needle),
       },

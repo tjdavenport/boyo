@@ -77,7 +77,7 @@ const commandBodies = {
     await msg.channel.send('Thumbs up to accept faction invites.');
     return msg;
   },
-  'faction-kick': async (config, attachedCommand, oAuth2Links, msg, models) => {
+  'faction-quit': async (config, attachedCommand, oAuth2Links, msg, models) => {
     if (!Object.values(cache.autoFactions[msg.guild.id]).map(({leaderId}) => leaderId).includes(msg.member.id)) {
       return msg.reply('you\'re not a faction leader!');
     }
