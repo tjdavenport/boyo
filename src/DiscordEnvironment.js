@@ -27,6 +27,7 @@ class PlasticClient extends Discord.Client {
       id: this.id,
       name: 'home of the foo bars'
     });
+    guild.roles.cache.set(guild.id, {id: guild.id, name: '@everyone'});
     this.guilds.cache.set(guild.id, guild);
 
     const user = new Discord.User(this, {
@@ -37,26 +38,30 @@ class PlasticClient extends Discord.Client {
       system: false,
       locale: 'en',
     });
-    this.users.cache.set(user.id, user);
+    const member = new Discord.GuildMember(this, {
+      user,
+    }, guild);
+    guild.members.cache.set(member.id, member)
+
 
     const general = await guild.channels.create('general');
     const message = new Discord.Message(this, {
       author: user,
       pinned: false,
-
     }, general);
 
     return {
       guild,
       user,
       channel: general,
-      send: (content, author = user, channel = general, data = {}) => this.emitAsync('message', new Discord.Message(this, {
-        content,
-        author,
+      member,
+      send: msg => this.emitAsync('message', new Discord.Message(this, {
+        author: member,
+        member,
         pinned: false,
         tts: false,
-        ...data
-      }, channel))
+        ...msg
+      }, msg.channel || general))
     };
   }
 }

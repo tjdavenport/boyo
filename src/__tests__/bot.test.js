@@ -179,21 +179,25 @@ describe('discord bot client', () => {
     await customer.get('/login');
     await customer.get(`/guilds/${msg.guild.id}/add-service/nitrado`);
 
-    /*global.client.emit('message', msg({
-      content: 'hello everyone',
-    }));
+    await msg.send({content: 'hello everyone'});
+
+    const admin = await msg.guild.roles.create({name: 'admin'});
+    const mod = await msg.guild.roles.create({name: 'mod'});
+    await msg.member.roles.add(admin.id);
 
     for (const key of Object.keys(constants.categories['nitrado-dayz'].botCommands)) {
-      customer.patch(`/api/guilds/${guildId}/attached-bot-command`, {
-        key, config: {serviceId: '54321', roleIds: [23456, 34567]}
+      customer.patch(`/api/guilds/${msg.guild.id}/attached-bot-command`, {
+        key, config: {serviceId: '54321', roleIds: [admin.id, mod.id]}
       });
       await new Promise(resolve => global.client.once('guild-busted', bustedGuildId => {
-        expect(bustedGuildId).toBe(guildId);
+        expect(bustedGuildId).toBe(msg.guild.id);
         resolve();
       }));
     }
 
-    await global.client.emitAsync('message', msg({
+    await msg.send('!help');
+
+    /*await global.client.emitAsync('message', msg({
       content: '!help',
     })).then(([handled]) => {
       expect(handled.mocked.replies.length).toBe(0);

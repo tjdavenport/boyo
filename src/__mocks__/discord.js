@@ -38,8 +38,8 @@ const token = {
 
 let startId = 0;
 const id = () => String((Date.now() + startId++) * 1111);
-const channels = {};
 
+const channels = {};
 app.post('/api/v7/guilds/:guildId/channels', (req, res, next) => {
   const {guildId} = req.params;
   !channels[guildId] && (channels[guildId] = []);
@@ -55,6 +55,34 @@ app.post('/api/v7/guilds/:guildId/channels', (req, res, next) => {
   channels[guildId].push(channel);
   return res.json(channel);
 });
+
+const roles = {};
+app.post('/api/v7/guilds/:guildId/roles', (req, res, next) => {
+  const {guildId} = req.params;
+  !roles[guildId] && (roles[guildId] = []);
+
+  const role = {
+    id: id(),
+    managed: false,
+    position: channels[guildId].length + 1,
+    mentionable: true,
+    hoist: false,
+    ...req.body
+  };
+
+  roles[guildId].push(role);
+  return res.json(role);
+});
+
+const memberRoles = {};
+app.put('/api/v7/guilds/:guildId/members/:memberId/roles/:roleId', (req, res, next) => {
+  const {guildId, memberId, roleId} = req.params;
+  !memberRoles[guildId] && (memberRoles[guildId] = {});
+  !memberRoles[guildId][memberId] && (memberRoles[guildId][memberId] = []);
+  memberRoles[guildId][memberId].push(roleId);
+  return res.json(null);
+});
+
 
 app.get('/api/oauth2/authorize', (req, res, next) => {
   return res.redirect(`${req.query.redirect_uri}?${new url.URLSearchParams({
