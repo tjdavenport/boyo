@@ -1,9 +1,67 @@
+const http = require('http');
+const faker = require('faker');
 const bot = require('./lib/bot');
 const db = require('./__mocks__/db');
+const Discord = require('discord.js');
 const config = require('./__mocks__/config');
 const EventEmitter = require('eventemitter2');
 const socketClient = require('socket.io-client');
 const NodeEnvironment = require('jest-environment-node');
+
+class PlasticClient extends Discord.Client {
+  constructor(options = {}) {
+    super({
+      http: {
+        api: 'http://localhost:1557/api',
+        agent: new http.Agent({keepAlive: true}),
+      }
+    });
+    this.startId = 0;
+    this.token = 'boyo12345abcd';
+  }
+  get id() {
+    return String((Date.now() + this.startId++) * 1111);
+  }
+  msg = async () => {
+    const guild = new Discord.Guild(this, {
+      id: this.id,
+      name: 'home of the foo bars'
+    });
+    this.guilds.cache.set(guild.id, guild);
+
+    const user = new Discord.User(this, {
+      id: this.id,
+      bot: false,
+      username: faker.internet.userName(),
+      discriminator: faker.random.number({min: 1000, max: 9999}),
+      system: false,
+      locale: 'en',
+    });
+    this.users.cache.set(user.id, user);
+
+    const general = await guild.channels.create('general');
+    const message = new Discord.Message(this, {
+      author: user,
+      pinned: false,
+
+    }, general);
+
+    return {
+      guild,
+      user,
+      channel: general,
+      send: (content, author = user, channel = general, data = {}) => this.emitAsync('message', new Discord.Message(this, {
+        content,
+        author,
+        pinned: false,
+        tts: false,
+        ...data
+      }, channel))
+    };
+  }
+}
+
+Object.assign(PlasticClient.prototype, EventEmitter.prototype);
 
 class DiscordEnvironment extends NodeEnvironment {
   constructor(config, context) {
@@ -11,7 +69,7 @@ class DiscordEnvironment extends NodeEnvironment {
   }
   async setup() {
     await super.setup();
-    this.global.client = new EventEmitter();
+    this.global.client = new PlasticClient();
     this.global.socket = socketClient('http://localhost:1227');
     await bot(config, db.models(), this.global.client, this.global.socket);
   }

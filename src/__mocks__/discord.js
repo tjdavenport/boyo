@@ -5,6 +5,7 @@ const url = require('url');
 const cors = require('cors');
 const axios = require('axios');
 const express = require('express');
+const Discord = require('discord.js');
 const bodyParser = require('body-parser');
 
 const app = express();
@@ -35,12 +36,24 @@ const token = {
   'token_type': 'Bearer'
 };
 
-app.post('/api/guilds/:guildId/channels', (req, res, next) => {
-  console.log(req.body);
-  console.log(req.headers);
-  console.log(req.query);
-  console.log(req.params);
-  return res.json({foo: bar});
+let startId = 0;
+const id = () => String((Date.now() + startId++) * 1111);
+const channels = {};
+
+app.post('/api/v7/guilds/:guildId/channels', (req, res, next) => {
+  const {guildId} = req.params;
+  !channels[guildId] && (channels[guildId] = []);
+
+  const channel = {
+    id: id(),
+    'guild_id': guildId,
+    ...req.body,
+    type: Discord.Constants.ChannelTypes.TEXT,
+    position: channels[guildId].length + 1,
+  };
+
+  channels[guildId].push(channel);
+  return res.json(channel);
 });
 
 app.get('/api/oauth2/authorize', (req, res, next) => {
@@ -49,6 +62,7 @@ app.get('/api/oauth2/authorize', (req, res, next) => {
     state: req.query.state
   }).toString()}`);
 });
+
 app.post('/api/oauth2/token', (req, res, next) => {
   return res.json(token);
 });
@@ -73,7 +87,7 @@ app.get('/api/users/@me', (req, res, next) => {
 
 
 app.start = port => new Promise(resolve => {
-  discord.listen(port, () => resolve(discord));
+  const server = app.listen(port, () => resolve(server));
 });
 
 module.exports = app;

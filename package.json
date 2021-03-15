@@ -23,7 +23,7 @@
     "commander": "^6.1.0",
     "cors": "^2.8.5",
     "debug": "^4.2.0",
-    "discord.js": "^12.3.1",
+    "discord.js": "https://github.com/tjdavenport/discord.js/archive/12.5.2.tar.gz",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
@@ -87,6 +87,7 @@
     "@storybook/react": "^6.1.17",
     "axios-cookiejar-support": "^1.0.1",
     "eventemitter2": "^6.4.4",
+    "faker": "^5.4.0",
     "tough-cookie": "^3.0.1"
   }
 }
