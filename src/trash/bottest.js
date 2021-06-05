@@ -179,13 +179,17 @@ describe('discord bot client', () => {
     await customer.get('/login');
     await customer.get(`/guilds/${msg.guild.id}/add-service/nitrado`);
 
-    await msg.send({content: 'hello everyone'});
+    //await msg.send({content: 'hello everyone'});
+
 
     const admin = await msg.guild.roles.create({name: 'admin'});
     const mod = await msg.guild.roles.create({name: 'mod'});
-    await msg.member.roles.add(admin.id);
+    const cloned = await msg.member.roles.add(admin.id);
 
-    for (const key of Object.keys(constants.categories['nitrado-dayz'].botCommands)) {
+    console.log(msg.member.roles.cache.array());
+    console.log(cloned.roles.cache.array());
+
+    /*for (const key of Object.keys(constants.categories['nitrado-dayz'].botCommands)) {
       customer.patch(`/api/guilds/${msg.guild.id}/attached-bot-command`, {
         key, config: {serviceId: '54321', roleIds: [admin.id, mod.id]}
       });
@@ -195,7 +199,7 @@ describe('discord bot client', () => {
       }));
     }
 
-    await msg.send('!help');
+    await msg.send('!help');*/
 
     /*await global.client.emitAsync('message', msg({
       content: '!help',

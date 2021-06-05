@@ -15,7 +15,6 @@ module.exports = app => {
   const models = db.models();
   const log = app.get('log');
   const config = app.get('config');
-  const bus = app.get('bus') || new EventEmitter();
 
   const discord = axios.create({
     baseURL: config.DISCORD_API_URI,
@@ -64,7 +63,6 @@ module.exports = app => {
       .catch(error => error.response ? res.status(error.response.status).json(error.response.data) : next(error));
   });
 
-
   passport.use((() => {
     const nitrado = new Strategy({
       scope: ['user_info', 'service'],
@@ -85,7 +83,6 @@ module.exports = app => {
         const [link] = await models.OAuth2Link.findOrCreate({
           where: {type: 'nitrado', refreshToken, guildId}
         });
-        bus.emit('guild-bust', guildId);
       
         link.accessToken = accessToken;
         link.refreshToken = refreshToken;
@@ -159,7 +156,6 @@ module.exports = app => {
     });
     attachedBotCommand.config = req.body.config;
     await attachedBotCommand.save();
-    bus.emit('guild-bust', req.params.guildId);
     return res.json(attachedBotCommand.toJSON());
   }));
   app.get('/api/guilds/:guildId/attached-bot-commands', authed, handle(async (req, res) => {

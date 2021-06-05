@@ -1,6 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const bot = require('./src/lib/bot');
 const app = require('./src/lib/app');
 const log = require('./src/lib/log');
 const Discord = require('discord.js');
@@ -52,35 +51,15 @@ configure(process.env);
     });
 
   program
-    .command('serve <port> <socketPort>')
-    .action(async (port, socketPort) => {
+    .command('serve <port>')
+    .action(async (port) => {
       const boyo = express();
       boyo.set('config', process.env);
       boyo.set('log', log);
-      boyo.set('bus', socketServer(socketPort));
       app(boyo);
       await register(boyo);
       await boyo.start(port);
       log.http(`http server listening on ${port}`);
-      log.http(`socket server listening on ${socketPort}`);
-    });
-
-  program
-    .command('bot:login')
-    .action(async (socketPort) => {
-      const client = new Discord.Client({
-        partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
-        ws: {intents: Discord.Intents.ALL},
-      });
-
-      const boyo = await bot(
-        process.env,
-        models(), 
-        client, 
-        socketClient(`http://localhost:${socketPort}`),
-        log.bot
-      );
-      boyo.login(process.env.DISCORD_BOT_TOKEN);
     });
 
   await program.parseAsync();
