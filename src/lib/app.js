@@ -2,6 +2,7 @@ const db = require('./db');
 const cors = require('cors');
 const axios = require('axios');
 const fsx = require('fs-extra');
+const discord = require('./http');
 const passport = require('passport');
 const EventEmitter = require('events');
 const bodyParser = require('body-parser');
@@ -16,11 +17,6 @@ module.exports = app => {
   const log = app.get('log');
   const config = app.get('config');
 
-  const discord = axios.create({
-    baseURL: config.DISCORD_API_URI,
-    headers: {Authorization: `Bot ${config.DISCORD_BOT_TOKEN}`}
-  });
-
   const handle = handler => (req, res, next) => handler.call(null, req, res, next).catch(err => next(err));
   const authed = (req, res, next) => req.isAuthenticated() ? next() : res.sendStatus(401);
   const suicideWindow = (req, res) => res.type('html').send(`
@@ -28,7 +24,7 @@ module.exports = app => {
       window.close();
     </script></head></html>
   `)
-  const discordios = options => (req, res, next) => discord.request(typeof options === 'function' ? options(req) : options)
+  const discordios = options => (req, res, next) => discord(config).request(typeof options === 'function' ? options(req) : options)
     .then(discordRes => res.set('Cache-Control', 'public, max-stale=4').status(discordRes.status).json(discordRes.data))
     .catch(error => error.response ? res.status(error.response.status).json(error.response.data) : next(error));
 
@@ -101,7 +97,7 @@ module.exports = app => {
     return nitrado;
   })());
   passport.use(new Strategy({
-    scope: ['identify', 'email', 'guilds'],
+    scope: ['identify', 'email', 'guilds', 'applications.commands'],
     clientID: config.DISCORD_CLIENT_ID,
     clientSecret: config.DISCORD_CLIENT_SECRET,
     callbackURL: `${config.ORIGIN}/login/callback`,

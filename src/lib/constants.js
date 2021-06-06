@@ -10,14 +10,44 @@ const dPerms = {
 };
 
 exports.factionColors = ['BLACK', 'BLUE', 'GREEN', 'ORANGE', 'PINK', 'RED', 'YELLOW', 'WHITE'];
+exports.testGuildId = '695309211608940674';
+exports.applicationId = '752638531972890726';
 
-exports.categories = {
+exports.services = {
+  'nitrado-dayz-management': {
+    name: 'Nitrado DayZ Management',
+    requiredPerms: [
+      dPerms.readMessageHistory, 
+      dPerms.sendMessages, 
+      dPerms.addReactions, 
+      dPerms.manageRoles, 
+      dPerms.manageChannels, 
+      dPerms.viewChannel
+    ],
+    oAuth2Links: ['nitrado'],
+    slashCommands: [
+      {
+        name: 'nitrado-dayz-restart',
+        description: 'Shutdown then start the Nitrado DayZ server.',
+      },
+      {
+        name: 'nitrado-dayz-shutdown',
+        description: 'Shutdown the Nitrado DayZ server.',
+      },
+      {
+        name: 'nitrado-dayz-start',
+        description: 'Start the Nitrado DayZ server.',
+      }
+    ]
+  }
+};
+
+/*exports.categories = {
   'auto-factions': {
     name: 'Auto Factions',
     botCommands: {
       'faction-create': {
         description: 'Create a private faction channel & custom role',
-        discordPerms: [dPerms.readMessageHistory, dPerms.sendMessages, dPerms.addReactions, dPerms.manageRoles, dPerms.manageChannels, dPerms.viewChannel],
         oAuth2Links: [],
       },
       'faction-invite': {
@@ -62,4 +92,4 @@ exports.categories = {
       },
     }
   }
-};
+};*/

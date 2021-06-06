@@ -36,7 +36,7 @@ module.exports = {
           allowNull: true
         },
       }),
-      AttachedBotCommand: sql.define('AttachedBotCommand', {
+      AttachedService: sql.define('AttachedService', {
         key: {
           type: DataTypes.STRING(255),
           allowNull: false
@@ -45,25 +45,13 @@ module.exports = {
           type: DataTypes.STRING(255),
           allowNull: false
         },
-        config: {
+        document: {
           type: DataTypes.JSON(),
           allowNull: false,
-          defaultValue: {}
-        },
-      }),
-      AttachedBotService: sql.define('AttachedBotService', {
-        key: {
-          type: DataTypes.STRING(255),
-          allowNull: false
-        },
-        guildId: {
-          type: DataTypes.STRING(255),
-          allowNull: false
-        },
-        config: {
-          type: DataTypes.JSON(),
-          allowNull: false,
-          defaultValue: {}
+          defaultValue: {
+            permissions: [],
+            guildApplicationCommands: [],
+          }
         },
       }),
       OAuth2Link: sql.define('OAuth2Link', {

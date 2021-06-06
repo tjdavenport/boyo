@@ -2,12 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const app = require('./src/lib/app');
 const log = require('./src/lib/log');
-const Discord = require('discord.js');
 const {program} = require('commander');
-const socketServer = require('socket.io');
-const socketClient = require('socket.io-client');
+const {discord} = require('./src/lib/http');
 const register = require('@react-ssr/express/register');
 const {sql, configure, models} = require('./src/lib/db');
+const {applicationId, testGuildId, services} = require('./src/lib/constants');
 
 configure(process.env);
 
@@ -39,15 +38,43 @@ configure(process.env);
     });
 
   program
-    .command('db:seed:auto-factions <guildId>')
-    .action(async guildId => {
-      for (const key of ['faction-create', 'faction-invite', 'faction-quit', 'faction-kick']) {
-        await models().AttachedBotCommand.create({
-          key, guildId
-        });
+    .command('slash-commands:seed')
+    .action(async () => {
+      try {
+        const res = await discord(process.env).post(
+          `/applications/${applicationId}/guilds/${testGuildId}/commands`,
+          services['nitrado-dayz-management'].slashCommands[0]
+        );
+        log.http('slash command seeded');
+      } catch (error) {
+        console.error(error.response.data);
+        process.exit();
       }
-      await sql().close();
-      process.exit();
+    });
+
+  program
+    .command('slash-commands:list')
+    .action(async () => {
+      try {
+        const res = await discord(process.env).get(`/applications/${applicationId}/guilds/${testGuildId}/commands`);
+        console.table(res.data);
+      } catch (error) {
+        console.error(error.response.data);
+        process.exit();
+      }
+    });
+
+  program
+    .command('slash-commands:clear')
+    .action(async () => {
+      try {
+        const {data} = await discord(process.env).get(`/applications/${applicationId}/guilds/${testGuildId}/commands`);
+        await Promise.all(data.map(({id}) => discord(process.env).delete(`/applications/${applicationId}/guilds/${testGuildId}/commands/${id}`)))
+        log.http('slash commands cleared');
+      } catch (error) {
+        console.error(error.response.data);
+        process.exit();
+      }
     });
 
   program
